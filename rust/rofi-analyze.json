@@ -1,0 +1,2085 @@
+{
+  "schema": "rust-anything/analyze@1",
+  "language": "c",
+  "summary": {
+    "packages": 2,
+    "source_files": 50,
+    "test_files": 12,
+    "ui_files": 0,
+    "loc": 28731,
+    "units": 9,
+    "ready": 1,
+    "caution": 5,
+    "blocked": 0,
+    "keep": 3,
+    "parse_errors": 41
+  },
+  "packages": [
+    {
+      "name": "rofi",
+      "dir": "",
+      "order": 1,
+      "runtime": "portable",
+      "workspace_deps": [],
+      "test_files": 12,
+      "units": [
+        "config/",
+        "include/",
+        "include/modes/",
+        "include/widgets/",
+        "source/",
+        "source/modes/",
+        "source/wayland/",
+        "source/widgets/",
+        "source/xcb/"
+      ]
+    }
+  ],
+  "units": [
+    {
+      "id": "config/",
+      "package": "rofi",
+      "files": [
+        "config/config.c"
+      ],
+      "loc": 180,
+      "wave": 1,
+      "readiness": 87,
+      "status": "caution",
+      "bridge": "c-abi",
+      "platforms": [],
+      "risks": [
+        {
+          "risk": "null-references",
+          "severity": "medium",
+          "count": 14,
+          "samples": [
+            "config/config.c:50",
+            "config/config.c:53",
+            "config/config.c:55"
+          ]
+        }
+      ],
+      "internal_deps": [
+        "include/"
+      ],
+      "workspace_deps": [],
+      "external_deps": [
+        "<glib.h>"
+      ],
+      "direct_tests": 0,
+      "fan_in": 0,
+      "density": 0.0,
+      "priority": 61,
+      "exports": 0,
+      "bridgeable": 0,
+      "notes": [
+        "1 parse errors: results for this unit are partial.",
+        "1 system libraries dependencies not in the crate table: check them by hand.",
+        "1 imports use aliases or virtual modules and were not followed."
+      ]
+    },
+    {
+      "id": "include/",
+      "package": "rofi",
+      "files": [
+        "include/display-internal.h",
+        "include/helper-theme.h",
+        "include/input-codes.h",
+        "include/mode-private.h",
+        "include/settings.h",
+        "include/view-internal.h",
+        "include/wayland-internal.h",
+        "include/wayland.h",
+        "include/xcb-dummy.h",
+        "include/xcb-internal.h",
+        "include/xcb.h"
+      ],
+      "loc": 1276,
+      "wave": 0,
+      "readiness": 0,
+      "status": "caution",
+      "bridge": "c-abi",
+      "platforms": [],
+      "risks": [
+        {
+          "risk": "pointers",
+          "severity": "high",
+          "count": 262,
+          "samples": [
+            "include/display-internal.h:40",
+            "include/display-internal.h:40",
+            "include/display-internal.h:40"
+          ]
+        },
+        {
+          "risk": "reflection",
+          "severity": "medium",
+          "count": 3,
+          "samples": [
+            "include/xcb.h:84",
+            "include/xcb.h:86",
+            "include/xcb.h:89"
+          ]
+        }
+      ],
+      "internal_deps": [],
+      "workspace_deps": [],
+      "external_deps": [
+        "<cairo.h>",
+        "<glib.h>",
+        "<gmodule.h>",
+        "<libgwater-wayland.h>",
+        "<libgwater-xcb.h>",
+        "<libsn/sn.h>",
+        "<nkutils-bindings.h>",
+        "<pango/pango.h>",
+        "<wayland-client.h>",
+        "<xcb-imdkit/imclient.h>",
+        "<xcb/xcb.h>",
+        "<xcb/xcb_ewmh.h>",
+        "<xcb/xcb_keysyms.h>",
+        "<xkbcommon/xkbcommon.h>"
+      ],
+      "direct_tests": 7,
+      "fan_in": 6,
+      "density": 0.0,
+      "priority": 20,
+      "exports": 0,
+      "bridgeable": 0,
+      "notes": [
+        "2 parse errors: results for this unit are partial.",
+        "14 system libraries dependencies not in the crate table: check them by hand.",
+        "17 imports use aliases or virtual modules and were not followed.",
+        "Leaf: imports no other unit.",
+        "7 test files import it directly."
+      ]
+    },
+    {
+      "id": "include/modes/",
+      "package": "rofi",
+      "files": [
+        "include/modes/dmenuscriptshared.h",
+        "include/modes/modes.h"
+      ],
+      "loc": 89,
+      "wave": 0,
+      "readiness": 75,
+      "status": "caution",
+      "bridge": "c-abi",
+      "platforms": [],
+      "risks": [
+        {
+          "risk": "pointers",
+          "severity": "high",
+          "count": 9,
+          "samples": [
+            "include/modes/dmenuscriptshared.h:10",
+            "include/modes/dmenuscriptshared.h:13",
+            "include/modes/dmenuscriptshared.h:16"
+          ]
+        }
+      ],
+      "internal_deps": [],
+      "workspace_deps": [],
+      "external_deps": [
+        "<glib.h>",
+        "<mode.h>"
+      ],
+      "direct_tests": 0,
+      "fan_in": 3,
+      "density": 0.0,
+      "priority": 55,
+      "exports": 0,
+      "bridgeable": 0,
+      "notes": [
+        "1 parse errors: results for this unit are partial.",
+        "2 system libraries dependencies not in the crate table: check them by hand.",
+        "11 imports use aliases or virtual modules and were not followed.",
+        "Leaf: imports no other unit."
+      ]
+    },
+    {
+      "id": "include/widgets/",
+      "package": "rofi",
+      "files": [
+        "include/widgets/widget-internal.h"
+      ],
+      "loc": 197,
+      "wave": 0,
+      "readiness": 83,
+      "status": "ready",
+      "bridge": "c-abi",
+      "platforms": [],
+      "risks": [
+        {
+          "risk": "pointers",
+          "severity": "high",
+          "count": 30,
+          "samples": [
+            "include/widgets/widget-internal.h:93",
+            "include/widgets/widget-internal.h:97",
+            "include/widgets/widget-internal.h:99"
+          ]
+        }
+      ],
+      "internal_deps": [],
+      "workspace_deps": [],
+      "external_deps": [],
+      "direct_tests": 1,
+      "fan_in": 1,
+      "density": 0.0,
+      "priority": 66,
+      "exports": 0,
+      "bridgeable": 0,
+      "notes": [
+        "1 imports use aliases or virtual modules and were not followed.",
+        "Leaf: imports no other unit.",
+        "1 test files import it directly."
+      ]
+    },
+    {
+      "id": "source/",
+      "package": "rofi",
+      "files": [
+        "source/css-colors.c",
+        "source/display.c",
+        "source/helper.c",
+        "source/history.c",
+        "source/keyb.c",
+        "source/mode.c",
+        "source/rofi-icon-fetcher.c",
+        "source/rofi-types.c",
+        "source/rofi.c",
+        "source/theme.c",
+        "source/timings.c",
+        "source/view.c",
+        "source/xrmoptions.c"
+      ],
+      "loc": 10118,
+      "wave": 2,
+      "readiness": 0,
+      "status": "keep",
+      "bridge": "c-abi",
+      "platforms": [],
+      "risks": [
+        {
+          "risk": "pointers",
+          "severity": "high",
+          "count": 1566,
+          "samples": [
+            "source/css-colors.c:152",
+            "source/display.c:11",
+            "source/display.c:13"
+          ]
+        },
+        {
+          "risk": "string-offsets",
+          "severity": "high",
+          "count": 58,
+          "samples": [
+            "source/helper.c:156",
+            "source/helper.c:290",
+            "source/helper.c:384"
+          ]
+        },
+        {
+          "risk": "platform-specific",
+          "severity": "high",
+          "count": 10,
+          "samples": [
+            "source/helper.c:114",
+            "source/helper.c:118",
+            "source/helper.c:565"
+          ]
+        },
+        {
+          "risk": "null-references",
+          "severity": "medium",
+          "count": 703,
+          "samples": [
+            "source/display.c:14",
+            "source/helper.c:76",
+            "source/helper.c:103"
+          ]
+        },
+        {
+          "risk": "integer-semantics",
+          "severity": "medium",
+          "count": 145,
+          "samples": [
+            "source/helper.c:114",
+            "source/helper.c:118",
+            "source/helper.c:148"
+          ]
+        },
+        {
+          "risk": "division-semantics",
+          "severity": "medium",
+          "count": 39,
+          "samples": [
+            "source/css-colors.c:152",
+            "source/rofi-icon-fetcher.c:666",
+            "source/rofi-icon-fetcher.c:666"
+          ]
+        },
+        {
+          "risk": "reflection",
+          "severity": "medium",
+          "count": 1,
+          "samples": [
+            "source/helper.c:816"
+          ]
+        },
+        {
+          "risk": "exceptions",
+          "severity": "low",
+          "count": 1,
+          "samples": [
+            "source/view.c:2080"
+          ]
+        }
+      ],
+      "internal_deps": [
+        "include/",
+        "include/modes/",
+        "source/widgets/"
+      ],
+      "workspace_deps": [],
+      "external_deps": [
+        "<cairo.h>",
+        "<config.h>",
+        "<fcntl.h>",
+        "<gdk-pixbuf/gdk-pixbuf.h>",
+        "<gio/gio.h>",
+        "<glib-unix.h>",
+        "<glib.h>",
+        "<glib/gstdio.h>",
+        "<gmodule.h>",
+        "<nkutils-bindings.h>",
+        "<pango/pango-fontmap.h>",
+        "<pango/pango.h>",
+        "<pango/pangocairo.h>",
+        "<pwd.h>",
+        "<sys/file.h>",
+        "<sys/stat.h>",
+        "<sys/types.h>",
+        "<sysexits.h>",
+        "<unistd.h>",
+        "<wayland-version.h>",
+        "<widgets/widget.h>",
+        "<xcb/xcb.h>",
+        "<xkbcommon/xkbcommon.h>"
+      ],
+      "direct_tests": 0,
+      "fan_in": 0,
+      "density": 2.3,
+      "priority": 17,
+      "exports": 0,
+      "bridgeable": 0,
+      "notes": [
+        "Depends on the target (hardware registers, memory layout, inline assembly): keep in C, since a recording on this machine cannot vouch for the target.",
+        "6 parse errors: results for this unit are partial.",
+        "19 system libraries dependencies not in the crate table: check them by hand.",
+        "14 imports use aliases or virtual modules and were not followed."
+      ]
+    },
+    {
+      "id": "source/modes/",
+      "package": "rofi",
+      "files": [
+        "source/modes/combi.c",
+        "source/modes/dmenu.c",
+        "source/modes/drun.c",
+        "source/modes/filebrowser.c",
+        "source/modes/help-keys.c",
+        "source/modes/recursivebrowser.c",
+        "source/modes/run.c",
+        "source/modes/script.c",
+        "source/modes/ssh.c",
+        "source/modes/wayland-window.c",
+        "source/modes/window.c"
+      ],
+      "loc": 8081,
+      "wave": 1,
+      "readiness": 0,
+      "status": "keep",
+      "bridge": "c-abi",
+      "platforms": [],
+      "risks": [
+        {
+          "risk": "pointers",
+          "severity": "high",
+          "count": 1711,
+          "samples": [
+            "source/modes/combi.c:47",
+            "source/modes/combi.c:55",
+            "source/modes/combi.c:56"
+          ]
+        },
+        {
+          "risk": "string-offsets",
+          "severity": "high",
+          "count": 24,
+          "samples": [
+            "source/modes/combi.c:154",
+            "source/modes/combi.c:260",
+            "source/modes/combi.c:311"
+          ]
+        },
+        {
+          "risk": "platform-specific",
+          "severity": "high",
+          "count": 5,
+          "samples": [
+            "source/modes/combi.c:248",
+            "source/modes/drun.c:1551",
+            "source/modes/ssh.c:106"
+          ]
+        },
+        {
+          "risk": "null-references",
+          "severity": "medium",
+          "count": 750,
+          "samples": [
+            "source/modes/combi.c:64",
+            "source/modes/combi.c:69",
+            "source/modes/combi.c:70"
+          ]
+        },
+        {
+          "risk": "integer-semantics",
+          "severity": "medium",
+          "count": 196,
+          "samples": [
+            "source/modes/combi.c:77",
+            "source/modes/combi.c:102",
+            "source/modes/combi.c:116"
+          ]
+        },
+        {
+          "risk": "division-semantics",
+          "severity": "medium",
+          "count": 10,
+          "samples": [
+            "source/modes/dmenu.c:67",
+            "source/modes/dmenu.c:68",
+            "source/modes/dmenu.c:73"
+          ]
+        }
+      ],
+      "internal_deps": [
+        "include/",
+        "include/modes/"
+      ],
+      "workspace_deps": [],
+      "external_deps": [
+        "<dirent.h>",
+        "<fcntl.h>",
+        "<gio/gdesktopappinfo.h>",
+        "<gio/gio.h>",
+        "<gio/gunixinputstream.h>",
+        "<glib-unix.h>",
+        "<glib.h>",
+        "<glib/gstdio.h>",
+        "<glob.h>",
+        "<gmodule.h>",
+        "<helper.h>",
+        "<modes/modes.h>",
+        "<pango/pango.h>",
+        "<rofi.h>",
+        "<strings.h>",
+        "<sys/stat.h>",
+        "<sys/types.h>",
+        "<theme.h>",
+        "<unistd.h>",
+        "<wayland-client.h>",
+        "<xcb/xcb.h>",
+        "<xcb/xcb_atom.h>",
+        "<xcb/xcb_ewmh.h>",
+        "<xcb/xcb_icccm.h>"
+      ],
+      "direct_tests": 0,
+      "fan_in": 0,
+      "density": 1.8,
+      "priority": 16,
+      "exports": 0,
+      "bridgeable": 0,
+      "notes": [
+        "Depends on the target (hardware registers, memory layout, inline assembly): keep in C, since a recording on this machine cannot vouch for the target.",
+        "10 parse errors: results for this unit are partial.",
+        "19 system libraries dependencies not in the crate table: check them by hand.",
+        "84 imports use aliases or virtual modules and were not followed."
+      ]
+    },
+    {
+      "id": "source/wayland/",
+      "package": "rofi",
+      "files": [
+        "source/wayland/display.c",
+        "source/wayland/view.c"
+      ],
+      "loc": 2383,
+      "wave": 1,
+      "readiness": 0,
+      "status": "caution",
+      "bridge": "c-abi",
+      "platforms": [],
+      "risks": [
+        {
+          "risk": "pointers",
+          "severity": "high",
+          "count": 412,
+          "samples": [
+            "source/wayland/display.c:84",
+            "source/wayland/display.c:86",
+            "source/wayland/display.c:87"
+          ]
+        },
+        {
+          "risk": "string-offsets",
+          "severity": "high",
+          "count": 7,
+          "samples": [
+            "source/wayland/display.c:1714",
+            "source/wayland/display.c:1717",
+            "source/wayland/display.c:1888"
+          ]
+        },
+        {
+          "risk": "null-references",
+          "severity": "medium",
+          "count": 181,
+          "samples": [
+            "source/wayland/display.c:127",
+            "source/wayland/display.c:132",
+            "source/wayland/display.c:132"
+          ]
+        },
+        {
+          "risk": "division-semantics",
+          "severity": "medium",
+          "count": 18,
+          "samples": [
+            "source/wayland/display.c:417",
+            "source/wayland/display.c:479",
+            "source/wayland/display.c:711"
+          ]
+        },
+        {
+          "risk": "integer-semantics",
+          "severity": "medium",
+          "count": 16,
+          "samples": [
+            "source/wayland/display.c:210",
+            "source/wayland/display.c:862",
+            "source/wayland/display.c:1546"
+          ]
+        },
+        {
+          "risk": "reflection",
+          "severity": "medium",
+          "count": 1,
+          "samples": [
+            "source/wayland/display.c:72"
+          ]
+        }
+      ],
+      "internal_deps": [
+        "include/"
+      ],
+      "workspace_deps": [],
+      "external_deps": [
+        "<cairo.h>",
+        "<config.h>",
+        "<fcntl.h>",
+        "<glib.h>",
+        "<glib/gstdio.h>",
+        "<libgwater-wayland.h>",
+        "<nkutils-bindings.h>",
+        "<pango/pango.h>",
+        "<rofi.h>",
+        "<sys/mman.h>",
+        "<sys/types.h>",
+        "<unistd.h>",
+        "<wayland-client.h>",
+        "<wayland-cursor.h>",
+        "<xcb/xcb.h>",
+        "<xkbcommon/xkbcommon-compose.h>",
+        "<xkbcommon/xkbcommon.h>"
+      ],
+      "direct_tests": 0,
+      "fan_in": 0,
+      "density": 1.0,
+      "priority": 15,
+      "exports": 8,
+      "bridgeable": 3,
+      "notes": [
+        "2 parse errors: results for this unit are partial.",
+        "13 system libraries dependencies not in the crate table: check them by hand.",
+        "17 imports use aliases or virtual modules and were not followed."
+      ]
+    },
+    {
+      "id": "source/widgets/",
+      "package": "rofi",
+      "files": [
+        "source/widgets/box.c",
+        "source/widgets/container.c",
+        "source/widgets/icon.c",
+        "source/widgets/listview.c",
+        "source/widgets/scrollbar.c",
+        "source/widgets/textbox.c",
+        "source/widgets/widget.c"
+      ],
+      "loc": 3642,
+      "wave": 1,
+      "readiness": 0,
+      "status": "caution",
+      "bridge": "c-abi",
+      "platforms": [],
+      "risks": [
+        {
+          "risk": "pointers",
+          "severity": "high",
+          "count": 404,
+          "samples": [
+            "source/widgets/box.c:47",
+            "source/widgets/box.c:50",
+            "source/widgets/box.c:52"
+          ]
+        },
+        {
+          "risk": "string-offsets",
+          "severity": "high",
+          "count": 5,
+          "samples": [
+            "source/widgets/textbox.c:350",
+            "source/widgets/textbox.c:573",
+            "source/widgets/textbox.c:574"
+          ]
+        },
+        {
+          "risk": "null-references",
+          "severity": "medium",
+          "count": 165,
+          "samples": [
+            "source/widgets/box.c:66",
+            "source/widgets/box.c:83",
+            "source/widgets/box.c:102"
+          ]
+        },
+        {
+          "risk": "integer-semantics",
+          "severity": "medium",
+          "count": 85,
+          "samples": [
+            "source/widgets/box.c:53",
+            "source/widgets/box.c:68",
+            "source/widgets/box.c:85"
+          ]
+        },
+        {
+          "risk": "division-semantics",
+          "severity": "medium",
+          "count": 64,
+          "samples": [
+            "source/widgets/box.c:179",
+            "source/widgets/box.c:249",
+            "source/widgets/icon.c:65"
+          ]
+        }
+      ],
+      "internal_deps": [
+        "include/",
+        "include/widgets/"
+      ],
+      "workspace_deps": [],
+      "external_deps": [
+        "<glib.h>",
+        "<widgets/box.h>",
+        "<widgets/icon.h>",
+        "<widgets/listview.h>",
+        "<widgets/scrollbar.h>",
+        "<widgets/textbox.h>",
+        "<widgets/widget.h>"
+      ],
+      "direct_tests": 0,
+      "fan_in": 1,
+      "density": 1.2,
+      "priority": 15,
+      "exports": 99,
+      "bridgeable": 5,
+      "notes": [
+        "5 parse errors: results for this unit are partial.",
+        "7 system libraries dependencies not in the crate table: check them by hand.",
+        "35 imports use aliases or virtual modules and were not followed."
+      ]
+    },
+    {
+      "id": "source/xcb/",
+      "package": "rofi",
+      "files": [
+        "source/xcb/display.c",
+        "source/xcb/view.c"
+      ],
+      "loc": 2765,
+      "wave": 1,
+      "readiness": 0,
+      "status": "keep",
+      "bridge": "c-abi",
+      "platforms": [],
+      "risks": [
+        {
+          "risk": "pointers",
+          "severity": "high",
+          "count": 406,
+          "samples": [
+            "source/xcb/display.c:103",
+            "source/xcb/display.c:103",
+            "source/xcb/display.c:108"
+          ]
+        },
+        {
+          "risk": "string-offsets",
+          "severity": "high",
+          "count": 6,
+          "samples": [
+            "source/xcb/display.c:561",
+            "source/xcb/display.c:1129",
+            "source/xcb/display.c:1329"
+          ]
+        },
+        {
+          "risk": "platform-specific",
+          "severity": "high",
+          "count": 2,
+          "samples": [
+            "source/xcb/display.c:1614",
+            "source/xcb/display.c:1633"
+          ]
+        },
+        {
+          "risk": "null-references",
+          "severity": "medium",
+          "count": 161,
+          "samples": [
+            "source/xcb/display.c:92",
+            "source/xcb/display.c:93",
+            "source/xcb/display.c:95"
+          ]
+        },
+        {
+          "risk": "integer-semantics",
+          "severity": "medium",
+          "count": 42,
+          "samples": [
+            "source/xcb/display.c:153",
+            "source/xcb/display.c:210",
+            "source/xcb/display.c:225"
+          ]
+        },
+        {
+          "risk": "division-semantics",
+          "severity": "medium",
+          "count": 39,
+          "samples": [
+            "source/xcb/display.c:160",
+            "source/xcb/display.c:160",
+            "source/xcb/display.c:166"
+          ]
+        },
+        {
+          "risk": "reflection",
+          "severity": "medium",
+          "count": 1,
+          "samples": [
+            "source/xcb/display.c:84"
+          ]
+        },
+        {
+          "risk": "exceptions",
+          "severity": "low",
+          "count": 3,
+          "samples": [
+            "source/xcb/display.c:1510",
+            "source/xcb/display.c:1539",
+            "source/xcb/display.c:1580"
+          ]
+        }
+      ],
+      "internal_deps": [
+        "include/",
+        "include/modes/"
+      ],
+      "workspace_deps": [],
+      "external_deps": [
+        "<cairo-xcb.h>",
+        "<cairo.h>",
+        "<config.h>",
+        "<gio/gio.h>",
+        "<glib.h>",
+        "<libsn/sn.h>",
+        "<pango/pango.h>",
+        "<rofi.h>",
+        "<unistd.h>",
+        "<xcb-imdkit/encoding.h>",
+        "<xcb/randr.h>",
+        "<xcb/xcb.h>",
+        "<xcb/xcb_aux.h>",
+        "<xcb/xcb_cursor.h>",
+        "<xcb/xcb_ewmh.h>",
+        "<xcb/xcb_icccm.h>",
+        "<xcb/xcb_keysyms.h>",
+        "<xcb/xinerama.h>",
+        "<xcb/xkb.h>",
+        "<xcb/xproto.h>",
+        "<xkbcommon/xkbcommon-x11.h>",
+        "<xkbcommon/xkbcommon.h>"
+      ],
+      "direct_tests": 0,
+      "fan_in": 0,
+      "density": 1.3,
+      "priority": 15,
+      "exports": 0,
+      "bridgeable": 0,
+      "notes": [
+        "Depends on the target (hardware registers, memory layout, inline assembly): keep in C, since a recording on this machine cannot vouch for the target.",
+        "2 parse errors: results for this unit are partial.",
+        "21 system libraries dependencies not in the crate table: check them by hand.",
+        "16 imports use aliases or virtual modules and were not followed."
+      ]
+    }
+  ],
+  "start_here": [
+    "source/widgets/",
+    "source/wayland/"
+  ],
+  "dependencies": [
+    {
+      "name": "<glib.h>",
+      "used_by": 5,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<cairo.h>",
+      "used_by": 2,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<libgwater-wayland.h>",
+      "used_by": 2,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<nkutils-bindings.h>",
+      "used_by": 2,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<pango/pango.h>",
+      "used_by": 2,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<wayland-client.h>",
+      "used_by": 2,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<xcb/xcb.h>",
+      "used_by": 2,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<xkbcommon/xkbcommon.h>",
+      "used_by": 2,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<config.h>",
+      "used_by": 1,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<glib/gstdio.h>",
+      "used_by": 1,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<gmodule.h>",
+      "used_by": 1,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<libgwater-xcb.h>",
+      "used_by": 1,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<libsn/sn.h>",
+      "used_by": 1,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<mode.h>",
+      "used_by": 1,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<rofi.h>",
+      "used_by": 1,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<wayland-cursor.h>",
+      "used_by": 1,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<widgets/box.h>",
+      "used_by": 1,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<widgets/icon.h>",
+      "used_by": 1,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<widgets/listview.h>",
+      "used_by": 1,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<widgets/scrollbar.h>",
+      "used_by": 1,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<widgets/textbox.h>",
+      "used_by": 1,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<widgets/widget.h>",
+      "used_by": 1,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<xcb-imdkit/imclient.h>",
+      "used_by": 1,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<xcb/xcb_ewmh.h>",
+      "used_by": 1,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<xcb/xcb_keysyms.h>",
+      "used_by": 1,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<xkbcommon/xkbcommon-compose.h>",
+      "used_by": 1,
+      "crates": null,
+      "fit": "unknown",
+      "note": ""
+    },
+    {
+      "name": "<fcntl.h>",
+      "used_by": 1,
+      "crates": "std::fs, std::process, libc",
+      "fit": "good",
+      "note": ""
+    },
+    {
+      "name": "<sys/mman.h>",
+      "used_by": 1,
+      "crates": "memmap2",
+      "fit": "good",
+      "note": ""
+    },
+    {
+      "name": "<sys/types.h>",
+      "used_by": 1,
+      "crates": "std::fs, std::process, libc",
+      "fit": "good",
+      "note": ""
+    },
+    {
+      "name": "<unistd.h>",
+      "used_by": 1,
+      "crates": "std::fs, std::process, libc",
+      "fit": "good",
+      "note": ""
+    }
+  ],
+  "whole_app": {
+    "shape": "cli",
+    "entry_points": [
+      {
+        "kind": "cli",
+        "path": "source/rofi.c",
+        "evidence": "`int main(` at source/rofi.c:989"
+      }
+    ],
+    "dependencies": [
+      {
+        "name": "<glib.h>",
+        "names": [
+          "<glib.h>"
+        ],
+        "declared": false,
+        "used_by": 8,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<pango/pango.h>",
+        "names": [
+          "<pango/pango.h>"
+        ],
+        "declared": false,
+        "used_by": 5,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<xcb/xcb.h>",
+        "names": [
+          "<xcb/xcb.h>"
+        ],
+        "declared": false,
+        "used_by": 5,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<cairo.h>",
+        "names": [
+          "<cairo.h>"
+        ],
+        "declared": false,
+        "used_by": 4,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<xkbcommon/xkbcommon.h>",
+        "names": [
+          "<xkbcommon/xkbcommon.h>"
+        ],
+        "declared": false,
+        "used_by": 4,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<config.h>",
+        "names": [
+          "<config.h>"
+        ],
+        "declared": false,
+        "used_by": 3,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<gio/gio.h>",
+        "names": [
+          "<gio/gio.h>"
+        ],
+        "declared": false,
+        "used_by": 3,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<glib/gstdio.h>",
+        "names": [
+          "<glib/gstdio.h>"
+        ],
+        "declared": false,
+        "used_by": 3,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<gmodule.h>",
+        "names": [
+          "<gmodule.h>"
+        ],
+        "declared": false,
+        "used_by": 3,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<nkutils-bindings.h>",
+        "names": [
+          "<nkutils-bindings.h>"
+        ],
+        "declared": false,
+        "used_by": 3,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<rofi.h>",
+        "names": [
+          "<rofi.h>"
+        ],
+        "declared": false,
+        "used_by": 3,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<wayland-client.h>",
+        "names": [
+          "<wayland-client.h>"
+        ],
+        "declared": false,
+        "used_by": 3,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<xcb/xcb_ewmh.h>",
+        "names": [
+          "<xcb/xcb_ewmh.h>"
+        ],
+        "declared": false,
+        "used_by": 3,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<glib-unix.h>",
+        "names": [
+          "<glib-unix.h>"
+        ],
+        "declared": false,
+        "used_by": 2,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<libgwater-wayland.h>",
+        "names": [
+          "<libgwater-wayland.h>"
+        ],
+        "declared": false,
+        "used_by": 2,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<libsn/sn.h>",
+        "names": [
+          "<libsn/sn.h>"
+        ],
+        "declared": false,
+        "used_by": 2,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<widgets/widget.h>",
+        "names": [
+          "<widgets/widget.h>"
+        ],
+        "declared": false,
+        "used_by": 2,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<xcb/xcb_icccm.h>",
+        "names": [
+          "<xcb/xcb_icccm.h>"
+        ],
+        "declared": false,
+        "used_by": 2,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<xcb/xcb_keysyms.h>",
+        "names": [
+          "<xcb/xcb_keysyms.h>"
+        ],
+        "declared": false,
+        "used_by": 2,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<cairo-xcb.h>",
+        "names": [
+          "<cairo-xcb.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<gdk-pixbuf/gdk-pixbuf.h>",
+        "names": [
+          "<gdk-pixbuf/gdk-pixbuf.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<gio/gdesktopappinfo.h>",
+        "names": [
+          "<gio/gdesktopappinfo.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<gio/gunixinputstream.h>",
+        "names": [
+          "<gio/gunixinputstream.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<glob.h>",
+        "names": [
+          "<glob.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<helper.h>",
+        "names": [
+          "<helper.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<libgwater-xcb.h>",
+        "names": [
+          "<libgwater-xcb.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<mode.h>",
+        "names": [
+          "<mode.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<modes/modes.h>",
+        "names": [
+          "<modes/modes.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<pango/pango-fontmap.h>",
+        "names": [
+          "<pango/pango-fontmap.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<pango/pangocairo.h>",
+        "names": [
+          "<pango/pangocairo.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<pwd.h>",
+        "names": [
+          "<pwd.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<strings.h>",
+        "names": [
+          "<strings.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<sys/file.h>",
+        "names": [
+          "<sys/file.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<sysexits.h>",
+        "names": [
+          "<sysexits.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<theme.h>",
+        "names": [
+          "<theme.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<wayland-cursor.h>",
+        "names": [
+          "<wayland-cursor.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<wayland-version.h>",
+        "names": [
+          "<wayland-version.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<widgets/box.h>",
+        "names": [
+          "<widgets/box.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<widgets/icon.h>",
+        "names": [
+          "<widgets/icon.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<widgets/listview.h>",
+        "names": [
+          "<widgets/listview.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<widgets/scrollbar.h>",
+        "names": [
+          "<widgets/scrollbar.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<widgets/textbox.h>",
+        "names": [
+          "<widgets/textbox.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<xcb-imdkit/encoding.h>",
+        "names": [
+          "<xcb-imdkit/encoding.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<xcb-imdkit/imclient.h>",
+        "names": [
+          "<xcb-imdkit/imclient.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<xcb/randr.h>",
+        "names": [
+          "<xcb/randr.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<xcb/xcb_atom.h>",
+        "names": [
+          "<xcb/xcb_atom.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<xcb/xcb_aux.h>",
+        "names": [
+          "<xcb/xcb_aux.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<xcb/xcb_cursor.h>",
+        "names": [
+          "<xcb/xcb_cursor.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<xcb/xinerama.h>",
+        "names": [
+          "<xcb/xinerama.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<xcb/xkb.h>",
+        "names": [
+          "<xcb/xkb.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<xcb/xproto.h>",
+        "names": [
+          "<xcb/xproto.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<xkbcommon/xkbcommon-compose.h>",
+        "names": [
+          "<xkbcommon/xkbcommon-compose.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<xkbcommon/xkbcommon-x11.h>",
+        "names": [
+          "<xkbcommon/xkbcommon-x11.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": null,
+        "fit": "unknown",
+        "note": ""
+      },
+      {
+        "name": "<dirent.h>",
+        "names": [
+          "<dirent.h>",
+          "<fcntl.h>",
+          "<sys/stat.h>",
+          "<sys/types.h>",
+          "<unistd.h>"
+        ],
+        "declared": false,
+        "used_by": 4,
+        "crates": "std::fs, std::process, libc",
+        "fit": "good",
+        "note": ""
+      },
+      {
+        "name": "<sys/mman.h>",
+        "names": [
+          "<sys/mman.h>"
+        ],
+        "declared": false,
+        "used_by": 1,
+        "crates": "memmap2",
+        "fit": "good",
+        "note": ""
+      }
+    ],
+    "pieces": [
+      {
+        "wave": 0,
+        "units": [
+          "include/"
+        ],
+        "loc": 1276,
+        "tangled": false
+      },
+      {
+        "wave": 0,
+        "units": [
+          "include/modes/"
+        ],
+        "loc": 89,
+        "tangled": false
+      },
+      {
+        "wave": 0,
+        "units": [
+          "include/widgets/"
+        ],
+        "loc": 197,
+        "tangled": false
+      },
+      {
+        "wave": 1,
+        "units": [
+          "config/"
+        ],
+        "loc": 180,
+        "tangled": false
+      },
+      {
+        "wave": 1,
+        "units": [
+          "source/wayland/"
+        ],
+        "loc": 2383,
+        "tangled": false
+      },
+      {
+        "wave": 1,
+        "units": [
+          "source/widgets/"
+        ],
+        "loc": 3642,
+        "tangled": false
+      }
+    ],
+    "decisions": [
+      {
+        "id": "D1",
+        "topic": "shape",
+        "question": "The app is a cli, entered through source/rofi.c. Port every entry point, in that shape?",
+        "recommendation": "Yes: a clap front door (`app front-door`) takes every command over first"
+      },
+      {
+        "id": "D2",
+        "topic": "keep source/",
+        "question": "source/ stays in the source language (Depends on the target (hardware registers, memory layout, inline assembly): keep in C, since a recording on this machine cannot vouch for the target). What replaces it in the Rust app, or does it stay outside?",
+        "recommendation": "Keep it outside the Rust app, behind the front door, and decide its replacement once the rest is Rust"
+      },
+      {
+        "id": "D3",
+        "topic": "keep source/modes/",
+        "question": "source/modes/ stays in the source language (Depends on the target (hardware registers, memory layout, inline assembly): keep in C, since a recording on this machine cannot vouch for the target). What replaces it in the Rust app, or does it stay outside?",
+        "recommendation": "Keep it outside the Rust app, behind the front door, and decide its replacement once the rest is Rust"
+      },
+      {
+        "id": "D4",
+        "topic": "keep source/xcb/",
+        "question": "source/xcb/ stays in the source language (Depends on the target (hardware registers, memory layout, inline assembly): keep in C, since a recording on this machine cannot vouch for the target). What replaces it in the Rust app, or does it stay outside?",
+        "recommendation": "Keep it outside the Rust app, behind the front door, and decide its replacement once the rest is Rust"
+      },
+      {
+        "id": "D5",
+        "topic": "dependency <glib.h>",
+        "question": "Which crate replaces <glib.h> (used by 8 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<glib.h>.md before porting what uses it"
+      },
+      {
+        "id": "D6",
+        "topic": "dependency <pango/pango.h>",
+        "question": "Which crate replaces <pango/pango.h> (used by 5 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<pango-pango.h>.md before porting what uses it"
+      },
+      {
+        "id": "D7",
+        "topic": "dependency <xcb/xcb.h>",
+        "question": "Which crate replaces <xcb/xcb.h> (used by 5 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<xcb-xcb.h>.md before porting what uses it"
+      },
+      {
+        "id": "D8",
+        "topic": "dependency <cairo.h>",
+        "question": "Which crate replaces <cairo.h> (used by 4 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<cairo.h>.md before porting what uses it"
+      },
+      {
+        "id": "D9",
+        "topic": "dependency <xkbcommon/xkbcommon.h>",
+        "question": "Which crate replaces <xkbcommon/xkbcommon.h> (used by 4 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<xkbcommon-xkbcommon.h>.md before porting what uses it"
+      },
+      {
+        "id": "D10",
+        "topic": "dependency <config.h>",
+        "question": "Which crate replaces <config.h> (used by 3 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<config.h>.md before porting what uses it"
+      },
+      {
+        "id": "D11",
+        "topic": "dependency <gio/gio.h>",
+        "question": "Which crate replaces <gio/gio.h> (used by 3 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<gio-gio.h>.md before porting what uses it"
+      },
+      {
+        "id": "D12",
+        "topic": "dependency <glib/gstdio.h>",
+        "question": "Which crate replaces <glib/gstdio.h> (used by 3 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<glib-gstdio.h>.md before porting what uses it"
+      },
+      {
+        "id": "D13",
+        "topic": "dependency <gmodule.h>",
+        "question": "Which crate replaces <gmodule.h> (used by 3 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<gmodule.h>.md before porting what uses it"
+      },
+      {
+        "id": "D14",
+        "topic": "dependency <nkutils-bindings.h>",
+        "question": "Which crate replaces <nkutils-bindings.h> (used by 3 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<nkutils-bindings.h>.md before porting what uses it"
+      },
+      {
+        "id": "D15",
+        "topic": "dependency <rofi.h>",
+        "question": "Which crate replaces <rofi.h> (used by 3 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<rofi.h>.md before porting what uses it"
+      },
+      {
+        "id": "D16",
+        "topic": "dependency <wayland-client.h>",
+        "question": "Which crate replaces <wayland-client.h> (used by 3 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<wayland-client.h>.md before porting what uses it"
+      },
+      {
+        "id": "D17",
+        "topic": "dependency <xcb/xcb_ewmh.h>",
+        "question": "Which crate replaces <xcb/xcb_ewmh.h> (used by 3 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<xcb-xcb_ewmh.h>.md before porting what uses it"
+      },
+      {
+        "id": "D18",
+        "topic": "dependency <glib-unix.h>",
+        "question": "Which crate replaces <glib-unix.h> (used by 2 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<glib-unix.h>.md before porting what uses it"
+      },
+      {
+        "id": "D19",
+        "topic": "dependency <libgwater-wayland.h>",
+        "question": "Which crate replaces <libgwater-wayland.h> (used by 2 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<libgwater-wayland.h>.md before porting what uses it"
+      },
+      {
+        "id": "D20",
+        "topic": "dependency <libsn/sn.h>",
+        "question": "Which crate replaces <libsn/sn.h> (used by 2 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<libsn-sn.h>.md before porting what uses it"
+      },
+      {
+        "id": "D21",
+        "topic": "dependency <widgets/widget.h>",
+        "question": "Which crate replaces <widgets/widget.h> (used by 2 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<widgets-widget.h>.md before porting what uses it"
+      },
+      {
+        "id": "D22",
+        "topic": "dependency <xcb/xcb_icccm.h>",
+        "question": "Which crate replaces <xcb/xcb_icccm.h> (used by 2 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<xcb-xcb_icccm.h>.md before porting what uses it"
+      },
+      {
+        "id": "D23",
+        "topic": "dependency <xcb/xcb_keysyms.h>",
+        "question": "Which crate replaces <xcb/xcb_keysyms.h> (used by 2 units)?",
+        "recommendation": "Research it against primary sources into rust/research/<xcb-xcb_keysyms.h>.md before porting what uses it"
+      },
+      {
+        "id": "D24",
+        "topic": "dependency <cairo-xcb.h>",
+        "question": "Which crate replaces <cairo-xcb.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<cairo-xcb.h>.md before porting what uses it"
+      },
+      {
+        "id": "D25",
+        "topic": "dependency <gdk-pixbuf/gdk-pixbuf.h>",
+        "question": "Which crate replaces <gdk-pixbuf/gdk-pixbuf.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<gdk-pixbuf-gdk-pixbuf.h>.md before porting what uses it"
+      },
+      {
+        "id": "D26",
+        "topic": "dependency <gio/gdesktopappinfo.h>",
+        "question": "Which crate replaces <gio/gdesktopappinfo.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<gio-gdesktopappinfo.h>.md before porting what uses it"
+      },
+      {
+        "id": "D27",
+        "topic": "dependency <gio/gunixinputstream.h>",
+        "question": "Which crate replaces <gio/gunixinputstream.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<gio-gunixinputstream.h>.md before porting what uses it"
+      },
+      {
+        "id": "D28",
+        "topic": "dependency <glob.h>",
+        "question": "Which crate replaces <glob.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<glob.h>.md before porting what uses it"
+      },
+      {
+        "id": "D29",
+        "topic": "dependency <helper.h>",
+        "question": "Which crate replaces <helper.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<helper.h>.md before porting what uses it"
+      },
+      {
+        "id": "D30",
+        "topic": "dependency <libgwater-xcb.h>",
+        "question": "Which crate replaces <libgwater-xcb.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<libgwater-xcb.h>.md before porting what uses it"
+      },
+      {
+        "id": "D31",
+        "topic": "dependency <mode.h>",
+        "question": "Which crate replaces <mode.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<mode.h>.md before porting what uses it"
+      },
+      {
+        "id": "D32",
+        "topic": "dependency <modes/modes.h>",
+        "question": "Which crate replaces <modes/modes.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<modes-modes.h>.md before porting what uses it"
+      },
+      {
+        "id": "D33",
+        "topic": "dependency <pango/pango-fontmap.h>",
+        "question": "Which crate replaces <pango/pango-fontmap.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<pango-pango-fontmap.h>.md before porting what uses it"
+      },
+      {
+        "id": "D34",
+        "topic": "dependency <pango/pangocairo.h>",
+        "question": "Which crate replaces <pango/pangocairo.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<pango-pangocairo.h>.md before porting what uses it"
+      },
+      {
+        "id": "D35",
+        "topic": "dependency <pwd.h>",
+        "question": "Which crate replaces <pwd.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<pwd.h>.md before porting what uses it"
+      },
+      {
+        "id": "D36",
+        "topic": "dependency <strings.h>",
+        "question": "Which crate replaces <strings.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<strings.h>.md before porting what uses it"
+      },
+      {
+        "id": "D37",
+        "topic": "dependency <sys/file.h>",
+        "question": "Which crate replaces <sys/file.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<sys-file.h>.md before porting what uses it"
+      },
+      {
+        "id": "D38",
+        "topic": "dependency <sysexits.h>",
+        "question": "Which crate replaces <sysexits.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<sysexits.h>.md before porting what uses it"
+      },
+      {
+        "id": "D39",
+        "topic": "dependency <theme.h>",
+        "question": "Which crate replaces <theme.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<theme.h>.md before porting what uses it"
+      },
+      {
+        "id": "D40",
+        "topic": "dependency <wayland-cursor.h>",
+        "question": "Which crate replaces <wayland-cursor.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<wayland-cursor.h>.md before porting what uses it"
+      },
+      {
+        "id": "D41",
+        "topic": "dependency <wayland-version.h>",
+        "question": "Which crate replaces <wayland-version.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<wayland-version.h>.md before porting what uses it"
+      },
+      {
+        "id": "D42",
+        "topic": "dependency <widgets/box.h>",
+        "question": "Which crate replaces <widgets/box.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<widgets-box.h>.md before porting what uses it"
+      },
+      {
+        "id": "D43",
+        "topic": "dependency <widgets/icon.h>",
+        "question": "Which crate replaces <widgets/icon.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<widgets-icon.h>.md before porting what uses it"
+      },
+      {
+        "id": "D44",
+        "topic": "dependency <widgets/listview.h>",
+        "question": "Which crate replaces <widgets/listview.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<widgets-listview.h>.md before porting what uses it"
+      },
+      {
+        "id": "D45",
+        "topic": "dependency <widgets/scrollbar.h>",
+        "question": "Which crate replaces <widgets/scrollbar.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<widgets-scrollbar.h>.md before porting what uses it"
+      },
+      {
+        "id": "D46",
+        "topic": "dependency <widgets/textbox.h>",
+        "question": "Which crate replaces <widgets/textbox.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<widgets-textbox.h>.md before porting what uses it"
+      },
+      {
+        "id": "D47",
+        "topic": "dependency <xcb-imdkit/encoding.h>",
+        "question": "Which crate replaces <xcb-imdkit/encoding.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<xcb-imdkit-encoding.h>.md before porting what uses it"
+      },
+      {
+        "id": "D48",
+        "topic": "dependency <xcb-imdkit/imclient.h>",
+        "question": "Which crate replaces <xcb-imdkit/imclient.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<xcb-imdkit-imclient.h>.md before porting what uses it"
+      },
+      {
+        "id": "D49",
+        "topic": "dependency <xcb/randr.h>",
+        "question": "Which crate replaces <xcb/randr.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<xcb-randr.h>.md before porting what uses it"
+      },
+      {
+        "id": "D50",
+        "topic": "dependency <xcb/xcb_atom.h>",
+        "question": "Which crate replaces <xcb/xcb_atom.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<xcb-xcb_atom.h>.md before porting what uses it"
+      },
+      {
+        "id": "D51",
+        "topic": "dependency <xcb/xcb_aux.h>",
+        "question": "Which crate replaces <xcb/xcb_aux.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<xcb-xcb_aux.h>.md before porting what uses it"
+      },
+      {
+        "id": "D52",
+        "topic": "dependency <xcb/xcb_cursor.h>",
+        "question": "Which crate replaces <xcb/xcb_cursor.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<xcb-xcb_cursor.h>.md before porting what uses it"
+      },
+      {
+        "id": "D53",
+        "topic": "dependency <xcb/xinerama.h>",
+        "question": "Which crate replaces <xcb/xinerama.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<xcb-xinerama.h>.md before porting what uses it"
+      },
+      {
+        "id": "D54",
+        "topic": "dependency <xcb/xkb.h>",
+        "question": "Which crate replaces <xcb/xkb.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<xcb-xkb.h>.md before porting what uses it"
+      },
+      {
+        "id": "D55",
+        "topic": "dependency <xcb/xproto.h>",
+        "question": "Which crate replaces <xcb/xproto.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<xcb-xproto.h>.md before porting what uses it"
+      },
+      {
+        "id": "D56",
+        "topic": "dependency <xkbcommon/xkbcommon-compose.h>",
+        "question": "Which crate replaces <xkbcommon/xkbcommon-compose.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<xkbcommon-xkbcommon-compose.h>.md before porting what uses it"
+      },
+      {
+        "id": "D57",
+        "topic": "dependency <xkbcommon/xkbcommon-x11.h>",
+        "question": "Which crate replaces <xkbcommon/xkbcommon-x11.h> (used by 1 unit)?",
+        "recommendation": "Research it against primary sources into rust/research/<xkbcommon-xkbcommon-x11.h>.md before porting what uses it"
+      }
+    ]
+  }
+}

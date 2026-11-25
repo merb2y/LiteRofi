@@ -1,0 +1,30 @@
+[package]
+name = "literofi-modes"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+literofi-core = { path = "../literofi-core" }
+literofi-theme = { path = "../literofi-theme" }
+literofi-render = { path = "../literofi-render" }
+regex.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.58", features = [
+    "Foundation",
+    "Foundation_Collections",
+    "Media_Control",
+    "Storage_Streams",
+    "Win32_Foundation",
+    "Win32_Graphics_Dwm",
+    "Win32_Graphics_Gdi",
+    "Win32_Storage_FileSystem",
+    "Win32_System_Com",
+    "Win32_System_Com_StructuredStorage",
+    "Win32_System_Threading",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_Shell",
+    "Win32_UI_Shell_Common",
+    "Win32_UI_WindowsAndMessaging",
+] }

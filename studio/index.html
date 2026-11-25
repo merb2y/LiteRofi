@@ -1,0 +1,1286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LiteRofi Theme Studio</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%237aa2f7'/%3E%3Cstop offset='55%25' stop-color='%239d7cd8'/%3E%3Cstop offset='100%25' stop-color='%23f7768e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='%23111522'/%3E%3Crect x='3' y='3' width='58' height='58' rx='14' fill='none' stroke='url(%23g)' stroke-width='3'/%3E%3Crect x='13' y='15' width='38' height='10' rx='5' fill='url(%23g)'/%3E%3Crect x='13' y='30' width='22' height='6' rx='3' fill='%23cdd6f4' opacity='0.9'/%3E%3Crect x='13' y='40' width='16' height='6' rx='3' fill='%238b96b5' opacity='0.7'/%3E%3Ccircle cx='44' cy='40' r='8' fill='%231b2135' stroke='url(%23g)' stroke-width='2.5'/%3E%3Ccircle cx='41' cy='38' r='2' fill='%237aa2f7'/%3E%3Ccircle cx='47' cy='38' r='2' fill='%23f7768e'/%3E%3Ccircle cx='44' cy='43' r='2' fill='%239ece6a'/%3E%3C/svg%3E" />
+<style>
+  :root {
+    --bg: #090b10;
+    --bg-elev: #0f121a;
+    --surface: #141926;
+    --surface-2: #1a2133;
+    --border: rgba(255, 255, 255, 0.08);
+    --border-strong: rgba(255, 255, 255, 0.14);
+    --text: #eef2ff;
+    --muted: #8b96b5;
+    --accent: #7aa2f7;
+    --accent-2: #bb9af7;
+    --accent-glow: rgba(122, 162, 247, 0.25);
+    --green: #9ece6a;
+    --gold: #e0af68;
+    --radius: 14px;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 248px 1fr;
+    height: 100vh;
+  }
+
+  aside {
+    background: linear-gradient(180deg, #0f131d 0%, #0b0e15 100%);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 18px 14px 14px;
+    gap: 14px;
+    overflow: hidden;
+  }
+
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    padding: 4px 6px;
+  }
+
+  .brand-logo {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(122, 162, 247, 0.35);
+    flex-shrink: 0;
+  }
+
+  .brand-text h1 {
+    margin: 0;
+    font-size: 14.5px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+
+  .brand-text span {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .import-cta {
+    width: 100%;
+    border: none;
+    border-radius: 11px;
+    padding: 10px 14px;
+    background: linear-gradient(135deg, var(--accent), #8e7cf7);
+    color: #090b10;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 6px 18px rgba(122, 162, 247, 0.28);
+    transition: transform 0.14s, filter 0.14s;
+  }
+
+  .import-cta:hover { transform: translateY(-1px); filter: brightness(1.08); }
+
+  .nav-group { display: flex; flex-direction: column; gap: 4px; }
+
+  .nav-section-title {
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #626d8a;
+    padding: 4px 8px;
+  }
+
+  .nav-item {
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    padding: 8px 10px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: 0.14s;
+    text-align: left;
+  }
+
+  .nav-item:hover { background: rgba(255, 255, 255, 0.04); color: var(--text); }
+  .nav-item.active {
+    background: rgba(122, 162, 247, 0.14);
+    border-color: rgba(122, 162, 247, 0.35);
+    color: var(--text);
+  }
+
+  .nav-count {
+    font-size: 11px;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--muted);
+  }
+
+  .nav-item.active .nav-count { background: rgba(122, 162, 247, 0.25); color: var(--accent); }
+
+  .cat-scroll {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-right: 2px;
+  }
+
+  .cat-scroll::-webkit-scrollbar { width: 5px; }
+  .cat-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.09); border-radius: 999px; }
+
+  .active-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 11.5px;
+  }
+
+  .active-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .active-row span { color: var(--muted); }
+  .active-row b {
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 130px;
+  }
+
+  .main-pane {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100vh;
+    background: radial-gradient(circle at 80% -10%, rgba(122, 162, 247, 0.09), transparent 45%),
+                radial-gradient(circle at 10% 100%, rgba(187, 154, 247, 0.06), transparent 40%),
+                var(--bg);
+  }
+
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(15, 18, 26, 0.72);
+    backdrop-filter: blur(14px);
+    flex-wrap: wrap;
+  }
+
+  .search-wrap { flex: 1; min-width: 210px; max-width: 420px; position: relative; }
+  .search-wrap input {
+    width: 100%;
+    padding: 9px 14px 9px 36px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  .search-wrap input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+  .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    font-size: 14px;
+    pointer-events: none;
+  }
+
+  .topbar-right { display: flex; align-items: center; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+
+  .sort-select, .tool-btn {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    padding: 8px 11px;
+    border-radius: 9px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+    transition: 0.14s;
+  }
+
+  .sort-select:hover, .tool-btn:hover { border-color: var(--border-strong); background: var(--surface-2); }
+  .tool-btn.accent-ghost { border-color: rgba(122, 162, 247, 0.35); color: var(--accent); }
+
+  .progress-pill {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gold);
+    background: rgba(224, 175, 104, 0.12);
+    border: 1px solid rgba(224, 175, 104, 0.3);
+    padding: 6px 10px;
+    border-radius: 999px;
+  }
+  .progress-pill.show { display: inline-flex; }
+
+  .subbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 22px 2px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  main { flex: 1; overflow-y: auto; padding: 14px 22px 32px; }
+  main::-webkit-scrollbar { width: 9px; }
+  main::-webkit-scrollbar-track { background: transparent; }
+  main::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 999px; }
+  main::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.22); }
+
+  .theme-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 18px;
+  }
+  .theme-grid.compact {
+    grid-template-columns: repeat(auto-fill, minmax(235px, 1fr));
+    gap: 12px;
+  }
+
+  .theme-card {
+    background: linear-gradient(180deg, rgba(26, 33, 51, 0.82), rgba(18, 22, 34, 0.92));
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+  }
+  .theme-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(122, 162, 247, 0.48);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+  }
+  .theme-card.active {
+    border-color: var(--green);
+    box-shadow: 0 0 0 1px var(--green), 0 12px 28px rgba(158, 206, 106, 0.16);
+  }
+
+  .thumb {
+    position: relative;
+    height: 220px;
+    background: radial-gradient(circle at 30% 25%, #20273c, #0d1018 75%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: pointer;
+  }
+  .theme-grid.compact .thumb { height: 150px; }
+
+  .thumb img {
+    max-width: 97%;
+    max-height: 96%;
+    object-fit: contain;
+    border-radius: 7px;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.52);
+    transition: transform 0.2s ease;
+  }
+  .theme-card:hover .thumb img { transform: scale(1.025); }
+  .thumb-placeholder { font-size: 11.5px; color: var(--muted); padding: 12px; text-align: center; }
+
+  .thumb-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(9, 11, 16, 0.05) 35%, rgba(9, 11, 16, 0.78) 100%);
+    opacity: 0;
+    transition: opacity 0.16s ease;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 10px;
+    gap: 8px;
+  }
+  .theme-card:hover .thumb-overlay { opacity: 1; }
+
+  .ov-btn {
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(15, 19, 29, 0.85);
+    backdrop-filter: blur(8px);
+    color: var(--text);
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.12s;
+  }
+  .ov-btn:hover { border-color: var(--accent); background: rgba(25, 32, 49, 0.95); }
+  .ov-btn.primary { background: var(--accent); border-color: var(--accent); color: #090b10; }
+
+  .badge-active {
+    position: absolute;
+    top: 9px;
+    left: 9px;
+    background: rgba(158, 206, 106, 0.95);
+    color: #090b10;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 999px;
+    letter-spacing: 0.4px;
+    z-index: 2;
+  }
+
+  .fav-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(9, 11, 16, 0.72);
+    backdrop-filter: blur(6px);
+    color: var(--muted);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    transition: 0.14s;
+  }
+  .fav-btn:hover { transform: scale(1.08); }
+  .fav-btn.fav { color: var(--gold); border-color: rgba(224, 175, 104, 0.55); }
+
+  .card-foot {
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .card-name { font-size: 13px; font-weight: 650; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .card-cat {
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  .palette-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(235px, 1fr)); gap: 12px; }
+  .palette-card {
+    background: linear-gradient(180deg, rgba(26, 33, 51, 0.75), rgba(18, 22, 34, 0.9));
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 11px;
+    cursor: pointer;
+    transition: transform 0.14s, border-color 0.14s, box-shadow 0.14s;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+  .palette-card:hover { transform: translateY(-2px); border-color: var(--accent); box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35); }
+  .palette-card.active { border-color: var(--green); box-shadow: 0 0 0 1px var(--green); }
+  .swatches { display: flex; height: 36px; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.09); }
+  .swatches span { flex: 1; }
+  .pal-row { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .pal-name { font-size: 12.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(5, 7, 11, 0.72);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+  }
+  .modal-backdrop.open { display: flex; }
+
+  .modal {
+    width: 100%;
+    max-width: 540px;
+    background: #121622;
+    border: 1px solid var(--border-strong);
+    border-radius: 16px;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .modal-head h2 { margin: 0; font-size: 15.5px; font-weight: 700; }
+  .close-x { border: none; background: transparent; color: var(--muted); font-size: 20px; cursor: pointer; line-height: 1; padding: 2px 6px; }
+  .close-x:hover { color: var(--text); }
+  .modal-body { padding: 18px 20px 20px; display: flex; flex-direction: column; gap: 14px; }
+
+  .dropzone {
+    border: 2px dashed rgba(122, 162, 247, 0.42);
+    background: rgba(122, 162, 247, 0.06);
+    border-radius: 12px;
+    padding: 24px 16px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.15s;
+  }
+  .dropzone:hover, .dropzone.dragover { border-color: var(--accent); background: rgba(122, 162, 247, 0.14); }
+  .dropzone strong { display: block; font-size: 13.5px; margin-bottom: 4px; }
+  .dropzone span { font-size: 12px; color: var(--muted); }
+
+  .divider { display: flex; align-items: center; gap: 10px; font-size: 11.5px; color: var(--muted); }
+  .divider::before, .divider::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-size: 12px; color: var(--muted); font-weight: 600; }
+  .field input, .field textarea {
+    width: 100%;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-elev);
+    color: var(--text);
+    padding: 9px 12px;
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+  }
+  .field textarea { font-family: Consolas, "Cascadia Code", monospace; font-size: 12px; min-height: 120px; resize: vertical; }
+  .field input:focus, .field textarea:focus { border-color: var(--accent); }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+  .global-drop-hint {
+    position: fixed;
+    inset: 14px;
+    border: 2px dashed var(--accent);
+    border-radius: 18px;
+    background: rgba(12, 16, 26, 0.86);
+    backdrop-filter: blur(8px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent);
+    z-index: 950;
+    pointer-events: none;
+  }
+  .global-drop-hint.show { display: flex; }
+
+  .toast {
+    position: fixed;
+    right: 22px;
+    bottom: 22px;
+    background: #171e2f;
+    border: 1px solid var(--accent);
+    color: var(--text);
+    padding: 11px 16px;
+    border-radius: 11px;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    transform: translateY(10px);
+    pointer-events: none;
+    transition: 0.2s;
+    z-index: 1100;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside>
+    <div class="brand">
+      <div class="brand-logo" aria-hidden="true">
+        <svg viewBox="0 0 64 64" width="34" height="34" style="display:block;border-radius:10px">
+          <defs>
+            <linearGradient id="lrG" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#7aa2f7"/>
+              <stop offset="55%" stop-color="#9d7cd8"/>
+              <stop offset="100%" stop-color="#f7768e"/>
+            </linearGradient>
+          </defs>
+          <rect width="64" height="64" rx="16" fill="#111522"/>
+          <rect x="3" y="3" width="58" height="58" rx="14" fill="none" stroke="url(#lrG)" stroke-width="3.2"/>
+          <rect x="13" y="15" width="38" height="10" rx="5" fill="url(#lrG)"/>
+          <rect x="13" y="30" width="22" height="6" rx="3" fill="#cdd6f4" opacity="0.92"/>
+          <rect x="13" y="40" width="16" height="6" rx="3" fill="#8b96b5" opacity="0.72"/>
+          <circle cx="44" cy="40" r="8" fill="#1b2135" stroke="url(#lrG)" stroke-width="2.6"/>
+          <circle cx="41" cy="38" r="2" fill="#7aa2f7"/>
+          <circle cx="47" cy="38" r="2" fill="#f7768e"/>
+          <circle cx="44" cy="43" r="2" fill="#9ece6a"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <h1>LiteRofi Studio</h1>
+        <span data-i18n="subtitle">Theme &amp; Color Gallery</span>
+      </div>
+    </div>
+
+    <button class="import-cta" id="openImportBtn" data-i18n="addThemeBtn">＋ Add Theme (.rasi)</button>
+
+    <div class="nav-group">
+      <div class="nav-section-title" data-i18n="viewSection">View</div>
+      <button class="nav-item active" data-tab="themes">
+        <span data-i18n="themesTab">Themes</span>
+        <span class="nav-count" id="navThemeCount">0</span>
+      </button>
+      <button class="nav-item" data-tab="palettes">
+        <span data-i18n="palettesTab">Color Palettes</span>
+        <span class="nav-count" id="navPaletteCount">0</span>
+      </button>
+    </div>
+
+    <div class="nav-section-title" id="catSectionTitle" data-i18n="categoriesSection">Categories</div>
+    <div class="cat-scroll" id="categoryList"></div>
+
+    <div class="active-box">
+      <div class="active-row"><span data-i18n="activeTheme">Active Theme</span><b id="activeThemeLabel">-</b></div>
+      <div class="active-row"><span data-i18n="activePalette">Active Palette</span><b id="activePaletteLabel">-</b></div>
+    </div>
+  </aside>
+
+  <div class="main-pane">
+    <div class="topbar">
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input id="searchInput" type="search" placeholder="Search themes or color palettes... (Ctrl+K)" autocomplete="off" />
+      </div>
+
+      <div class="topbar-right">
+        <span class="progress-pill" id="prerenderProgress"></span>
+        <select class="sort-select" id="sortSelect">
+          <option value="az"></option>
+          <option value="za"></option>
+          <option value="newest"></option>
+          <option value="oldest"></option>
+        </select>
+        <button class="tool-btn" id="densityBtn"></button>
+        <button class="tool-btn accent-ghost" id="prerenderBtn" data-i18n="generatePreviews">Generate Previews</button>
+        <button class="tool-btn" id="refreshCacheBtn" data-i18n="refresh">Refresh</button>
+        <button class="tool-btn" id="langBtn" title="Switch Language (EN / TR)">EN</button>
+      </div>
+    </div>
+
+    <div class="subbar">
+      <span id="subbarInfo">Loading...</span>
+      <span data-i18n="dropTip">Tip: Drag &amp; drop any .rasi file onto this window to import</span>
+    </div>
+
+    <main id="content"></main>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="importModal">
+  <div class="modal">
+    <div class="modal-head">
+      <h2 data-i18n="modalTitle">Add Theme to LiteRofi</h2>
+      <button class="close-x" id="closeImportBtn">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="dropzone" id="modalDropzone">
+        <strong data-i18n="dropzoneTitle">Select .rasi file or drop it here</strong>
+        <span data-i18n="dropzoneSub">You can import multiple .rasi files at once</span>
+        <input id="fileInput" type="file" accept=".rasi,.rasinc,.css,.txt" multiple hidden />
+      </div>
+
+      <div class="divider" data-i18n="orPaste">or paste .rasi code directly</div>
+
+      <div class="field">
+        <label for="pasteName" data-i18n="themeNameLabel">Theme Name</label>
+        <input id="pasteName" type="text" placeholder="example: my-custom-theme" />
+      </div>
+      <div class="field">
+        <label for="pasteCode" data-i18n="rasiContentLabel">.rasi Content</label>
+        <textarea id="pasteCode" placeholder="* { background-color: #1a1b26; text-color: #c0caf5; }"></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="tool-btn" id="cancelImportBtn" data-i18n="cancel">Cancel</button>
+        <button class="tool-btn accent-ghost" id="savePasteBtn" data-i18n="saveApply">Save &amp; Apply Theme</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="global-drop-hint" id="globalDropHint" data-i18n="globalDrop">Drop .rasi file to import into LiteRofi</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const I18N = {
+  en: {
+    subtitle: "Theme & Color Gallery",
+    addThemeBtn: "＋ Add Theme (.rasi)",
+    viewSection: "View",
+    themesTab: "Themes",
+    palettesTab: "Color Palettes",
+    categoriesSection: "Categories",
+    activeTheme: "Active Theme",
+    activePalette: "Active Palette",
+    none: "(none)",
+    defaultVal: "(default)",
+    searchPlaceholder: "Search themes or color palettes... (Ctrl+K)",
+    sortAz: "Sort: A → Z",
+    sortZa: "Sort: Z → A",
+    sortNewest: "Sort: Newest",
+    sortOldest: "Sort: Oldest",
+    compact: "Compact",
+    cozy: "Cozy",
+    generatePreviews: "Generate Previews",
+    refresh: "Refresh",
+    dropTip: "Tip: Drag & drop any .rasi file onto this window to import",
+    modalTitle: "Add Theme to LiteRofi",
+    dropzoneTitle: "Select .rasi file or drop it here",
+    dropzoneSub: "You can import multiple .rasi files at once",
+    orPaste: "or paste .rasi code directly",
+    themeNameLabel: "Theme Name",
+    themeNamePh: "example: my-custom-theme",
+    rasiContentLabel: ".rasi Content",
+    cancel: "Cancel",
+    saveApply: "Save & Apply Theme",
+    globalDrop: "Drop .rasi file to import into LiteRofi",
+    catAll: "All",
+    catFavorites: "★ Favorites",
+    catClassic: "Classic",
+    showingThemes: (n, cat) => `Showing ${n} themes (${cat})`,
+    showingPalettes: (n, total) => `${n} / ${total} color palettes — click any palette to apply on next Alt+Space`,
+    loadingPreview: "Loading preview...",
+    previewFailed: "Preview unavailable",
+    activeBadge: "ACTIVE",
+    livePreview: "Live Preview",
+    apply: "Apply",
+    selected: "Selected",
+    toastThemeApplied: (n) => `Theme applied: ${n} (Alt+Space ready)`,
+    toastPaletteApplied: (n) => `Palette applied: ${n} (Alt+Space ready)`,
+    toastLiveOpened: (n) => `Live preview opened: ${n}`,
+    toastImportedOne: (n) => `Theme imported & applied: ${n}`,
+    toastImportedMany: (n) => `${n} themes imported (shown at top)`,
+    toastPrerenderStart: "Generating missing previews in background...",
+    toastPrerenderDone: (ok, total) => `Previews completed (${ok}/${total})`,
+    toastCacheCleared: "Preview cache cleared, reloading...",
+    toastNeedNameCode: "Theme name and .rasi content are required",
+    errPrefix: "Error: ",
+  },
+  tr: {
+    subtitle: "Tema & Renk Galerisi",
+    addThemeBtn: "＋ Tema Ekle (.rasi)",
+    viewSection: "Görünüm",
+    themesTab: "Temalar",
+    palettesTab: "Renk Paletleri",
+    categoriesSection: "Kategoriler",
+    activeTheme: "Aktif Tema",
+    activePalette: "Aktif Palet",
+    none: "(yok)",
+    defaultVal: "(varsayılan)",
+    searchPlaceholder: "Tema veya renk paleti ara... (Ctrl+K)",
+    sortAz: "Sırala: A → Z",
+    sortZa: "Sırala: Z → A",
+    sortNewest: "Sırala: Yeniden Eskiye",
+    sortOldest: "Sırala: Eskiden Yeniye",
+    compact: "Kompakt",
+    cozy: "Rahat",
+    generatePreviews: "Önizlemeleri Üret",
+    refresh: "Yenile",
+    dropTip: "İpucu: Herhangi bir .rasi dosyasını pencereye sürükleyip bırakabilirsin",
+    modalTitle: "LiteRofi'ye Tema Ekle",
+    dropzoneTitle: ".rasi dosyası seç veya buraya sürükle",
+    dropzoneSub: "Birden fazla .rasi dosyasını aynı anda yükleyebilirsin",
+    orPaste: "veya .rasi kodunu doğrudan yapıştır",
+    themeNameLabel: "Tema Adı",
+    themeNamePh: "ornek: benim-temam",
+    rasiContentLabel: ".rasi İçeriği",
+    cancel: "Vazgeç",
+    saveApply: "Temayı Kaydet & Uygula",
+    globalDrop: "Bırak: .rasi temasını LiteRofi'ye ekle",
+    catAll: "Hepsi",
+    catFavorites: "★ Favoriler",
+    catClassic: "Klasik",
+    showingThemes: (n, cat) => `${n} tema gösteriliyor (${cat})`,
+    showingPalettes: (n, total) => `${n} / ${total} renk paleti — tıkladığın an Alt+Space'te güncellenir`,
+    loadingPreview: "Önizleme yükleniyor...",
+    previewFailed: "Önizleme alınamadı",
+    activeBadge: "AKTİF",
+    livePreview: "Canlı Dene",
+    apply: "Uygula",
+    selected: "Seçili",
+    toastThemeApplied: (n) => `Tema uygulandı: ${n} (Alt+Space hazır)`,
+    toastPaletteApplied: (n) => `Renk paleti uygulandı: ${n} (Alt+Space hazır)`,
+    toastLiveOpened: (n) => `Canlı açıldı: ${n}`,
+    toastImportedOne: (n) => `Tema eklendi ve uygulandı: ${n}`,
+    toastImportedMany: (n) => `${n} tema eklendi (en üstte görünüyor)`,
+    toastPrerenderStart: "Eksik önizlemeler arka planda üretiliyor...",
+    toastPrerenderDone: (ok, total) => `Önizlemeler tamamlandı (${ok}/${total})`,
+    toastCacheCleared: "Önizleme önbelleği temizlendi, yeniden yükleniyor...",
+    toastNeedNameCode: "Tema adı ve .rasi içeriği gerekli",
+    errPrefix: "Hata: ",
+  },
+};
+
+const state = {
+  lang: localStorage.getItem("literofi_studio_lang") || "en",
+  tab: "themes",
+  category: "All",
+  search: "",
+  sort: localStorage.getItem("literofi_studio_sort") || "az",
+  compact: localStorage.getItem("literofi_studio_compact") === "1",
+  activeTheme: "",
+  activePalette: "",
+  themes: [],
+  palettes: [],
+  cacheBust: Date.now(),
+};
+
+function t(key) {
+  return (I18N[state.lang] || I18N.en)[key];
+}
+
+function catLabel(cat) {
+  if (cat === "All") return t("catAll");
+  if (cat === "Favorites") return t("catFavorites");
+  if (cat === "Classic" || cat === "Klasik") return t("catClassic");
+  return cat;
+}
+
+function applyStaticI18n() {
+  document.documentElement.lang = state.lang;
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const val = t(el.dataset.i18n);
+    if (typeof val === "string") el.textContent = val;
+  });
+  document.getElementById("searchInput").placeholder = t("searchPlaceholder");
+  document.getElementById("pasteName").placeholder = t("themeNamePh");
+  const sel = document.getElementById("sortSelect");
+  sel.options[0].textContent = t("sortAz");
+  sel.options[1].textContent = t("sortZa");
+  sel.options[2].textContent = t("sortNewest");
+  sel.options[3].textContent = t("sortOldest");
+  document.getElementById("langBtn").textContent = state.lang.toUpperCase();
+}
+
+let imgObserver = null;
+let toastTimer = null;
+
+function showToast(msg) {
+  const el = document.getElementById("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 2800);
+}
+
+async function api(url, opts) {
+  const res = await fetch(url, opts);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data.error || "API error");
+  return data;
+}
+
+async function loadState() {
+  const data = await api("/api/state");
+  state.activeTheme = data.activeTheme || "";
+  state.activePalette = data.activePalette || "";
+  state.themes = (data.themes || []).map(x => ({
+    ...x,
+    category: x.category === "Klasik" ? "Classic" : x.category,
+  }));
+  state.palettes = data.palettes || [];
+  applyStaticI18n();
+  updateChrome();
+  renderCategories();
+  renderMain();
+  if (data.prerender && data.prerender.running) {
+    pollPrerender();
+  }
+}
+
+function updateChrome() {
+  document.getElementById("activeThemeLabel").textContent = state.activeTheme || t("none");
+  document.getElementById("activePaletteLabel").textContent = state.activePalette || t("defaultVal");
+  document.getElementById("navThemeCount").textContent = state.themes.length;
+  document.getElementById("navPaletteCount").textContent = state.palettes.length;
+  document.getElementById("sortSelect").value = state.sort;
+  document.getElementById("densityBtn").textContent = state.compact ? t("cozy") : t("compact");
+}
+
+function getCategories() {
+  const order = ["All", "Favorites", "Lab", "KooL", "adi1090x", "gh0stzk", "ML4W", "Catppuccin", "Modern", "Retro", "Classic"];
+  const counts = { All: state.themes.length, Favorites: 0 };
+  for (const item of state.themes) {
+    counts[item.category] = (counts[item.category] || 0) + 1;
+    if (item.isFavorite) counts.Favorites++;
+  }
+  return order.filter(c => c === "All" || c === "Favorites" || (counts[c] || 0) > 0)
+              .map(c => ({ name: c, count: counts[c] || 0 }));
+}
+
+function renderCategories() {
+  const list = document.getElementById("categoryList");
+  const title = document.getElementById("catSectionTitle");
+  if (state.tab !== "themes") {
+    title.style.display = "none";
+    list.innerHTML = "";
+    return;
+  }
+  title.style.display = "block";
+  const cats = getCategories();
+  list.innerHTML = cats.map(c => `
+    <button class="nav-item ${state.category === c.name ? "active" : ""}" data-cat="${c.name}">
+      <span>${catLabel(c.name)}</span>
+      <span class="nav-count">${c.count}</span>
+    </button>
+  `).join("");
+
+  list.querySelectorAll(".nav-item").forEach(btn => {
+    btn.addEventListener("click", () => {
+      state.category = btn.dataset.cat;
+      renderCategories();
+      renderMain();
+    });
+  });
+}
+
+function sortItems(list) {
+  const arr = [...list];
+  const loc = state.lang === "tr" ? "tr" : "en";
+  if (state.sort === "az") {
+    arr.sort((a, b) => a.name.localeCompare(b.name, loc, { sensitivity: "base" }));
+  } else if (state.sort === "za") {
+    arr.sort((a, b) => b.name.localeCompare(a.name, loc, { sensitivity: "base" }));
+  } else if (state.sort === "newest") {
+    arr.sort((a, b) => (b.mtime || 0) - (a.mtime || 0) || a.name.localeCompare(b.name, loc, { sensitivity: "base" }));
+  } else if (state.sort === "oldest") {
+    arr.sort((a, b) => (a.mtime || 0) - (b.mtime || 0) || a.name.localeCompare(b.name, loc, { sensitivity: "base" }));
+  }
+  return arr;
+}
+
+function filteredThemes() {
+  const q = state.search.trim().toLowerCase();
+  return sortItems(state.themes.filter(item => {
+    if (state.category === "Favorites" && !item.isFavorite) return false;
+    if (state.category !== "All" && state.category !== "Favorites" && item.category !== state.category) return false;
+    if (q && !item.name.toLowerCase().includes(q) && !item.category.toLowerCase().includes(q)) return false;
+    return true;
+  }));
+}
+
+function filteredPalettes() {
+  const q = state.search.trim().toLowerCase();
+  return sortItems(state.palettes.filter(p => !q || p.name.toLowerCase().includes(q)));
+}
+
+function setupLazyObserver() {
+  if (imgObserver) imgObserver.disconnect();
+  imgObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.isIntersecting) continue;
+      const thumb = entry.target;
+      imgObserver.unobserve(thumb);
+      const name = thumb.dataset.theme;
+      const img = document.createElement("img");
+      img.alt = name;
+      img.decoding = "async";
+      img.src = `/api/preview/${encodeURIComponent(name)}.png?render=1&v=${state.cacheBust}`;
+      img.onload = () => {
+        const ph = thumb.querySelector(".thumb-placeholder");
+        if (ph) ph.remove();
+        thumb.insertBefore(img, thumb.firstChild);
+      };
+      img.onerror = () => {
+        const ph = thumb.querySelector(".thumb-placeholder");
+        if (ph) ph.textContent = t("previewFailed");
+      };
+    }
+  }, { root: document.getElementById("content"), rootMargin: "240px" });
+}
+
+function renderMain() {
+  const container = document.getElementById("content");
+  const subbar = document.getElementById("subbarInfo");
+
+  if (state.tab === "themes") {
+    const items = filteredThemes();
+    subbar.textContent = t("showingThemes")(items.length, catLabel(state.category));
+    setupLazyObserver();
+    const grid = document.createElement("div");
+    grid.className = "theme-grid" + (state.compact ? " compact" : "");
+
+    for (const item of items) {
+      const isActive = item.name.toLowerCase() === state.activeTheme.toLowerCase();
+      const card = document.createElement("div");
+      card.className = "theme-card" + (isActive ? " active" : "");
+      card.innerHTML = `
+        <div class="thumb" data-theme="${escapeHtml(item.name)}">
+          <div class="thumb-placeholder">${t("loadingPreview")}</div>
+          ${isActive ? `<span class="badge-active">${t("activeBadge")}</span>` : ""}
+          <button class="fav-btn ${item.isFavorite ? "fav" : ""}">${item.isFavorite ? "★" : "☆"}</button>
+          <div class="thumb-overlay">
+            <button class="ov-btn live-btn">${t("livePreview")}</button>
+            <button class="ov-btn primary apply-btn">${isActive ? t("selected") : t("apply")}</button>
+          </div>
+        </div>
+        <div class="card-foot">
+          <span class="card-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+          <span class="card-cat">${escapeHtml(catLabel(item.category))}</span>
+        </div>
+      `;
+
+      const thumb = card.querySelector(".thumb");
+      imgObserver.observe(thumb);
+      thumb.addEventListener("click", (e) => {
+        if (e.target.closest("button")) return;
+        doLivePreview(item.name);
+      });
+
+      card.querySelector(".fav-btn").addEventListener("click", async (e) => {
+        e.stopPropagation();
+        try {
+          const res = await api("/api/favorite", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: item.name }),
+          });
+          item.isFavorite = res.isFavorite;
+          renderCategories();
+          renderMain();
+        } catch (err) {
+          showToast(t("errPrefix") + err.message);
+        }
+      });
+
+      card.querySelector(".live-btn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        doLivePreview(item.name);
+      });
+      card.querySelector(".apply-btn").addEventListener("click", (e) => {
+        e.stopPropagation();
+        doApplyTheme(item.name);
+      });
+
+      grid.appendChild(card);
+    }
+    container.innerHTML = "";
+    container.appendChild(grid);
+  } else {
+    const items = filteredPalettes();
+    subbar.textContent = t("showingPalettes")(items.length, state.palettes.length);
+    const grid = document.createElement("div");
+    grid.className = "palette-grid";
+    for (const p of items) {
+      const isActive = p.name.toLowerCase() === state.activePalette.toLowerCase();
+      const card = document.createElement("div");
+      card.className = "palette-card" + (isActive ? " active" : "");
+      card.innerHTML = `
+        <div class="swatches">
+          <span style="background:${p.bg}" title="bg ${p.bg}"></span>
+          <span style="background:${p.bg_alt}" title="alt ${p.bg_alt}"></span>
+          <span style="background:${p.selected}" title="selected ${p.selected}"></span>
+          <span style="background:${p.active}" title="active ${p.active}"></span>
+          <span style="background:${p.urgent}" title="urgent ${p.urgent}"></span>
+          <span style="background:${p.fg}" title="fg ${p.fg}"></span>
+        </div>
+        <div class="pal-row">
+          <span class="pal-name" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</span>
+          ${isActive ? `<span class="card-cat" style="background:rgba(158,206,106,0.2);color:#9ece6a">${t("activeBadge")}</span>` : ""}
+        </div>
+      `;
+      card.addEventListener("click", () => doApplyPalette(p.name));
+      grid.appendChild(card);
+    }
+    container.innerHTML = "";
+    container.appendChild(grid);
+  }
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+}
+
+async function doApplyTheme(name) {
+  try {
+    await api("/api/apply-theme", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    state.activeTheme = name;
+    updateChrome();
+    renderMain();
+    showToast(t("toastThemeApplied")(name));
+  } catch (err) {
+    showToast(t("errPrefix") + err.message);
+  }
+}
+
+async function doApplyPalette(name) {
+  try {
+    await api("/api/apply-palette", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    state.activePalette = name;
+    updateChrome();
+    renderMain();
+    showToast(t("toastPaletteApplied")(name));
+  } catch (err) {
+    showToast(t("errPrefix") + err.message);
+  }
+}
+
+async function doLivePreview(name) {
+  try {
+    await api("/api/live-preview", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    });
+    showToast(t("toastLiveOpened")(name));
+  } catch (err) {
+    showToast(t("errPrefix") + err.message);
+  }
+}
+
+async function importSingleTheme(name, content, applyAfter = false) {
+  const res = await api("/api/import-theme", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, content }),
+  });
+  if (applyAfter) {
+    await api("/api/apply-theme", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: res.name }),
+    });
+  }
+  return res.name;
+}
+
+async function handleImportFiles(fileList) {
+  const files = Array.from(fileList || []).filter(f => f && f.size > 0);
+  if (!files.length) return;
+  let added = [];
+  for (const f of files) {
+    try {
+      const content = await f.text();
+      const saved = await importSingleTheme(f.name, content, files.length === 1);
+      added.push(saved);
+    } catch (err) {
+      showToast(t("errPrefix") + err.message);
+    }
+  }
+  if (added.length) {
+    closeImportModal();
+    state.tab = "themes";
+    state.category = "All";
+    state.sort = "newest";
+    localStorage.setItem("literofi_studio_sort", "newest");
+    state.cacheBust = Date.now();
+    await loadState();
+    showToast(added.length === 1 ? t("toastImportedOne")(added[0]) : t("toastImportedMany")(added.length));
+  }
+}
+
+async function pollPrerender() {
+  const el = document.getElementById("prerenderProgress");
+  el.classList.add("show");
+  const timer = setInterval(async () => {
+    try {
+      const st = await api("/api/prerender-status");
+      el.textContent = `Render: ${st.done}/${st.total}`;
+      if (!st.running) {
+        clearInterval(timer);
+        el.classList.remove("show");
+        state.cacheBust = Date.now();
+        showToast(t("toastPrerenderDone")(st.done - st.failed, st.total));
+        renderMain();
+      }
+    } catch {
+      clearInterval(timer);
+      el.classList.remove("show");
+    }
+  }, 1200);
+}
+
+const importModal = document.getElementById("importModal");
+const fileInput = document.getElementById("fileInput");
+const modalDropzone = document.getElementById("modalDropzone");
+
+function openImportModal() { importModal.classList.add("open"); }
+function closeImportModal() { importModal.classList.remove("open"); fileInput.value = ""; }
+
+document.getElementById("openImportBtn").addEventListener("click", openImportModal);
+document.getElementById("closeImportBtn").addEventListener("click", closeImportModal);
+document.getElementById("cancelImportBtn").addEventListener("click", closeImportModal);
+importModal.addEventListener("click", (e) => { if (e.target === importModal) closeImportModal(); });
+
+modalDropzone.addEventListener("click", () => fileInput.click());
+fileInput.addEventListener("change", () => handleImportFiles(fileInput.files));
+modalDropzone.addEventListener("dragover", (e) => { e.preventDefault(); modalDropzone.classList.add("dragover"); });
+modalDropzone.addEventListener("dragleave", () => modalDropzone.classList.remove("dragover"));
+modalDropzone.addEventListener("drop", (e) => {
+  e.preventDefault();
+  modalDropzone.classList.remove("dragover");
+  handleImportFiles(e.dataTransfer.files);
+});
+
+document.getElementById("savePasteBtn").addEventListener("click", async () => {
+  const name = document.getElementById("pasteName").value.trim();
+  const code = document.getElementById("pasteCode").value;
+  if (!name || !code.trim()) {
+    showToast(t("toastNeedNameCode"));
+    return;
+  }
+  try {
+    const saved = await importSingleTheme(name, code, true);
+    document.getElementById("pasteName").value = "";
+    document.getElementById("pasteCode").value = "";
+    closeImportModal();
+    state.tab = "themes";
+    state.category = "All";
+    state.sort = "newest";
+    localStorage.setItem("literofi_studio_sort", "newest");
+    state.cacheBust = Date.now();
+    await loadState();
+    showToast(t("toastImportedOne")(saved));
+  } catch (err) {
+    showToast(t("errPrefix") + err.message);
+  }
+});
+
+let dragDepth = 0;
+const globalHint = document.getElementById("globalDropHint");
+window.addEventListener("dragenter", (e) => {
+  if (importModal.classList.contains("open")) return;
+  if (e.dataTransfer && Array.from(e.dataTransfer.types || []).includes("Files")) {
+    dragDepth++;
+    globalHint.classList.add("show");
+  }
+});
+window.addEventListener("dragover", (e) => { e.preventDefault(); });
+window.addEventListener("dragleave", () => {
+  dragDepth = Math.max(0, dragDepth - 1);
+  if (dragDepth === 0) globalHint.classList.remove("show");
+});
+window.addEventListener("drop", (e) => {
+  e.preventDefault();
+  dragDepth = 0;
+  globalHint.classList.remove("show");
+  if (!importModal.classList.contains("open") && e.dataTransfer && e.dataTransfer.files.length) {
+    handleImportFiles(e.dataTransfer.files);
+  }
+});
+
+document.querySelectorAll("aside .nav-item[data-tab]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.querySelectorAll("aside .nav-item[data-tab]").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    state.tab = btn.dataset.tab;
+    renderCategories();
+    renderMain();
+  });
+});
+
+document.getElementById("searchInput").addEventListener("input", (e) => {
+  state.search = e.target.value;
+  renderMain();
+});
+
+document.getElementById("sortSelect").addEventListener("change", (e) => {
+  state.sort = e.target.value;
+  localStorage.setItem("literofi_studio_sort", state.sort);
+  renderMain();
+});
+
+document.getElementById("densityBtn").addEventListener("click", () => {
+  state.compact = !state.compact;
+  localStorage.setItem("literofi_studio_compact", state.compact ? "1" : "0");
+  updateChrome();
+  renderMain();
+});
+
+document.getElementById("langBtn").addEventListener("click", () => {
+  state.lang = state.lang === "en" ? "tr" : "en";
+  localStorage.setItem("literofi_studio_lang", state.lang);
+  applyStaticI18n();
+  updateChrome();
+  renderCategories();
+  renderMain();
+});
+
+document.getElementById("prerenderBtn").addEventListener("click", async () => {
+  try {
+    await api("/api/prerender", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ force: false }),
+    });
+    showToast(t("toastPrerenderStart"));
+    pollPrerender();
+  } catch (err) {
+    showToast(t("errPrefix") + err.message);
+  }
+});
+
+document.getElementById("refreshCacheBtn").addEventListener("click", async () => {
+  try {
+    await api("/api/clear-cache", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+    state.cacheBust = Date.now();
+    showToast(t("toastCacheCleared"));
+    renderMain();
+  } catch (err) {
+    showToast(t("errPrefix") + err.message);
+  }
+});
+
+window.addEventListener("keydown", (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+    e.preventDefault();
+    document.getElementById("searchInput").focus();
+  } else if (e.key === "Escape" && importModal.classList.contains("open")) {
+    closeImportModal();
+  }
+});
+
+setInterval(() => { fetch("/api/ping").catch(() => {}); }, 8000);
+loadState();
+</script>
+</body>
+</html>

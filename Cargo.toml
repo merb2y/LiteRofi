@@ -1,0 +1,19 @@
+[workspace]
+members = ["crates/literofi-core", "crates/literofi-theme", "crates/literofi-render", "crates/literofi-modes", "crates/literofi-cli"]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+regex = "1"
+unicode-normalization = "0.1"
+unicode-general-category = "0.6"
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+strip = true
+panic = "abort"

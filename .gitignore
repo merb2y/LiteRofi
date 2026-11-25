@@ -1,0 +1,11 @@
+/target/
+**/target/
+/reference/
+/dist/
+*.pdb
+*.log
+*.tmp
+*.TMP
+CAB20240.TMP
+.DS_Store
+Thumbs.db

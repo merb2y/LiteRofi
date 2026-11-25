@@ -1,0 +1,117 @@
+/* LiteRofi Tokyo Night — clean Windows 11 dark theme */
+@theme "/dev/null"
+
+* {
+    bg:          #1a1b26;
+    bg-alt:      #24283b;
+    bg-sel:      #33467c;
+    fg:          #c0caf5;
+    fg-muted:    #565f89;
+    accent:      #7aa2f7;
+    urgent:      #f7768e;
+    active:      #9ece6a;
+
+    background-color: transparent;
+    text-color:       @fg;
+    font:             "Segoe UI 11";
+}
+
+window {
+    width:            640px;
+    padding:          18px;
+    border:           1px;
+    border-radius:    12px;
+    border-color:     #414868;
+    background-color: @bg;
+    location:         center;
+    anchor:           center;
+}
+
+mainbox {
+    spacing:          12px;
+    children:         [ inputbar, message, listview ];
+}
+
+inputbar {
+    padding:          10px 14px;
+    spacing:          10px;
+    border:           1px;
+    border-radius:    8px;
+    border-color:     #414868;
+    background-color: @bg-alt;
+    children:         [ prompt, entry ];
+}
+
+prompt {
+    text-color:       @accent;
+    font:             "Segoe UI Bold 11";
+}
+
+entry {
+    placeholder:       "Type to search...";
+    placeholder-color: @fg-muted;
+}
+
+message {
+    padding:          8px 12px;
+    border-radius:    8px;
+    background-color: @bg-alt;
+}
+
+listview {
+    columns:          1;
+    lines:            8;
+    spacing:          4px;
+    fixed-height:     true;
+    scrollbar:        true;
+}
+
+scrollbar {
+    width:            4px;
+    handle-width:     4px;
+    handle-color:     @accent;
+    background-color: @bg-alt;
+}
+
+element {
+    orientation:      horizontal;
+    padding:          8px 12px;
+    spacing:          10px;
+    border-radius:    8px;
+    children:         [ element-icon, element-text ];
+}
+
+element normal.normal {
+    background-color: transparent;
+    text-color:       @fg;
+}
+
+element alternate.normal {
+    background-color: rgba(36, 40, 59, 0.35);
+    text-color:       @fg;
+}
+
+element selected.normal {
+    background-color: @bg-sel;
+    text-color:       #ffffff;
+}
+
+element normal.urgent,
+element alternate.urgent {
+    text-color:       @urgent;
+}
+
+element normal.active,
+element alternate.active {
+    text-color:       @active;
+}
+
+element-icon {
+    size:             24px;
+    vertical-align:   0.5;
+}
+
+element-text {
+    vertical-align:   0.5;
+    text-color:       inherit;
+}

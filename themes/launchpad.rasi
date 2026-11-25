@@ -1,0 +1,98 @@
+/* LiteRofi Launchpad — Windows 11 4x3 dark icon-grid theme */
+@theme "/dev/null"
+
+* {
+    bg:          rgba(20, 22, 28, 0.94);
+    bg-surface:  rgba(32, 36, 46, 0.92);
+    bg-selected: rgba(88, 166, 255, 0.24);
+    accent:      #58a6ff;
+    fg:          #e6edf3;
+    fg-muted:    #8b949e;
+
+    background-color: transparent;
+    text-color:       @fg;
+    font:             "Segoe UI 11";
+}
+
+window {
+    width:            760px;
+    padding:          22px;
+    border:           1px;
+    border-radius:    16px;
+    border-color:     rgba(255, 255, 255, 0.12);
+    background-color: @bg;
+    location:         center;
+    anchor:           center;
+}
+
+mainbox {
+    spacing:          16px;
+    children:         [ inputbar, message, listview ];
+}
+
+inputbar {
+    padding:          10px 14px;
+    spacing:          10px;
+    border:           1px;
+    border-radius:    10px;
+    border-color:     rgba(255, 255, 255, 0.10);
+    background-color: @bg-surface;
+    children:         [ prompt, entry ];
+}
+
+prompt {
+    text-color:       @accent;
+    font:             "Segoe UI Bold 11";
+}
+
+entry {
+    placeholder:       "Search applications...";
+    placeholder-color: @fg-muted;
+}
+
+message {
+    padding:          8px 12px;
+    border-radius:    8px;
+    background-color: @bg-surface;
+}
+
+listview {
+    columns:          4;
+    lines:            3;
+    spacing:          12px;
+    fixed-height:     true;
+    fixed-columns:    true;
+    scrollbar:        false;
+}
+
+element {
+    orientation:      vertical;
+    padding:          14px 10px;
+    spacing:          8px;
+    border-radius:    12px;
+    background-color: transparent;
+    children:         [ element-icon, element-text ];
+}
+
+element normal.normal {
+    background-color: transparent;
+    text-color:       @fg;
+}
+
+element selected.normal {
+    border:           1px;
+    border-color:     @accent;
+    background-color: @bg-selected;
+    text-color:       #ffffff;
+}
+
+element-icon {
+    size:             48px;
+    horizontal-align: 0.5;
+}
+
+element-text {
+    horizontal-align: 0.5;
+    vertical-align:   0.5;
+    text-color:       inherit;
+}

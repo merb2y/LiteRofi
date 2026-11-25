@@ -1,0 +1,8 @@
+[package]
+name = "literofi-theme"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+literofi-core = { path = "../literofi-core" }

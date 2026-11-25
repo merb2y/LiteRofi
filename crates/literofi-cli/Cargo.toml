@@ -1,0 +1,30 @@
+[package]
+name = "literofi"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "literofi"
+path = "src/main.rs"
+
+[[bin]]
+name = "literofi-studio"
+path = "src/studio.rs"
+
+[dependencies]
+literofi-core = { path = "../literofi-core" }
+literofi-theme = { path = "../literofi-theme" }
+literofi-render = { path = "../literofi-render" }
+literofi-modes = { path = "../literofi-modes" }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.58", features = [
+    "Win32_Foundation",
+    "Win32_System_Console",
+    "Win32_System_LibraryLoader",
+    "Win32_System_ProcessStatus",
+    "Win32_System_Threading",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_WindowsAndMessaging",
+] }

@@ -1,0 +1,84 @@
+/* LiteRofi Music Widget — styled after `niraj998/Rofi-Scripts/rofi/music/config.rasi`
+ * Large album artwork header + song pill overlay + horizontal big icon controls below.
+ */
+
+configuration {
+    show-icons: false;
+}
+
+* {
+    bg:               #0C0F09;
+    fg:               #05E289;
+    button:           #1B1E25;
+    background-color: @bg;
+    text-color:       @fg;
+    font:             "Segoe UI Semibold 11";
+}
+
+window {
+    transparency:     "real";
+    width:            480px;
+    border:           2px solid;
+    border-color:     @fg;
+    border-radius:    12px;
+    background-color: @bg;
+    padding:          0px;
+}
+
+mainbox {
+    orientation:      vertical;
+    spacing:          0px;
+    children:         [ inputbar, listview ];
+    background-color: @bg;
+}
+
+inputbar {
+    children:         [ prompt ];
+    expand:           false;
+    background-color: #141812;
+    border-radius:    10px 10px 0px 0px;
+    padding:          275px 15px 15px 15px;
+}
+
+prompt {
+    padding:          10px 14px;
+    border-radius:    10px;
+    expand:           false;
+    background-color: #0C0F09D8;
+    text-color:       @fg;
+    font:             "Segoe UI Semibold 11";
+}
+
+listview {
+    cycle:            true;
+    layout:           vertical;
+    flow:             horizontal;
+    columns:          5;
+    lines:            1;
+    fixed-height:     true;
+    fixed-columns:    true;
+    scrollbar:        false;
+    spacing:          10px;
+    padding:          14px 16px;
+    background-color: @bg;
+}
+
+element {
+    padding:          14px 8px;
+    border-radius:    10px;
+    background-color: @button;
+    text-color:       @fg;
+}
+
+element selected.normal {
+    background-color: @fg;
+    text-color:       @bg;
+}
+
+element-text {
+    font:             "JetBrainsMono Nerd Font 22";
+    horizontal-align: 0.5;
+    vertical-align:   0.5;
+    background-color: inherit;
+    text-color:       inherit;
+}
