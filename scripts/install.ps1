@@ -166,7 +166,7 @@ configuration {
 }
 
 /* Drop any GitHub Rofi .rasi theme into %APPDATA%\LiteRofi\themes\ and select it below */
-@theme "saint-rofi"
+@theme "dracula_config2"
 "@
     [System.IO.File]::WriteAllText($ConfigFile, $StarterConfig, [System.Text.UTF8Encoding]::new($false))
 }

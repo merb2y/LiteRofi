@@ -4,6 +4,20 @@ A native **Windows 10/11** reimplementation of **[Rofi](https://github.com/davat
 
 LiteRofi brings full GitHub `.rasi` theme compatibility, frosted-glass desktop blur, an instant `Alt+Space` background daemon, a built-in **Music Widget**, and a standalone **LiteRofi Theme Studio** directly to Windows — with zero external runtime dependencies.
 
+<p align="center">
+  <img src="docs/screenshots/dracula-default.png" alt="LiteRofi Default Theme (Dracula)" width="780" />
+</p>
+
+## Screenshots
+
+| LiteRofi Theme Studio (206 Themes + 406 Palettes) | Built-in Music Widget (Windows SMTC) |
+| :---: | :---: |
+| <img src="docs/screenshots/theme-studio.jpg" alt="LiteRofi Theme Studio" width="420" /> | <img src="docs/screenshots/music-widget.png" alt="LiteRofi Music Widget" width="320" /> |
+
+| Launchpad Icon Grid (`-theme launchpad`) | Split Wallpaper Layout (`adi1090x`) |
+| :---: | :---: |
+| <img src="docs/screenshots/launchpad.png" alt="Launchpad Theme" width="420" /> | <img src="docs/screenshots/adi-split.png" alt="Split Wallpaper Theme" width="420" /> |
+
 ## Features
 
 - **Native Rofi `.rasi` Engine:** Supports `@import`, `@theme`, `var()`, `calc()`, `@media`, `linear-gradient(...)`, `background-image: url(...)`, Pango markup, Nerd Font PUA glyph fallback, vertical/horizontal/grid listviews, `icon-current-entry`, `textbox-current-entry`, frosted-glass desktop backdrop blur, and live hot-reload.
