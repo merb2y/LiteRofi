@@ -89,6 +89,17 @@ cargo build --release --bins
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\scripts\package.ps1
 ```
 
+## Credits & Acknowledgments
+
+LiteRofi is an independent, from-scratch Windows + Rust reimplementation inspired by and designed for compatibility with **[Rofi](https://github.com/davatorium/rofi)** by **Dave Davenport (`davatorium`) and contributors** (MIT License). All `.rasi` theme language syntax, widget hierarchy, CLI flags, and mode concepts originate from upstream Rofi.
+
+Bundled community themes, color palettes, and widget inspirations belong to their respective open-source authors:
+- **[davatorium/rofi](https://github.com/davatorium/rofi)** & **[davatorium/rofi-themes](https://github.com/davatorium/rofi-themes)** — Official Rofi project & classic themes
+- **[dracula/rofi](https://github.com/dracula/rofi)** — Default `dracula_config2` theme
+- **[adi1090x/rofi](https://github.com/adi1090x/rofi)**, **[newmanls/rofi-themes-collection](https://github.com/newmanls/rofi-themes-collection)**, **[catppuccin/rofi](https://github.com/catppuccin/rofi)**, **[gh0stzk/dotfiles](https://github.com/gh0stzk/dotfiles)**, **[mylinuxforwork/dotfiles](https://github.com/mylinuxforwork/dotfiles)** — Community `.rasi` themes
+- **[tinted-theming/base16-rofi](https://github.com/tinted-theming/base16-rofi)** — Base16 color palettes
+- **[niraj998/Rofi-Scripts](https://github.com/niraj998/Rofi-Scripts)** — Visual inspiration for the built-in `music-player.rasi` layout
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
