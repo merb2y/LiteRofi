@@ -33,7 +33,7 @@ const STARTER_CONFIG_RASI: &str = r#"configuration {
 }
 
 /* Drop any GitHub .rasi theme into %APPDATA%\LiteRofi\themes\ and select it below */
-@theme "tokyonight"
+@theme "mango-minimal"
 "#;
 
 fn default_user_config_path() -> PathBuf {

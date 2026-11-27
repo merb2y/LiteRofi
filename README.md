@@ -5,16 +5,16 @@ A native **Windows 10/11** reimplementation of **[Rofi](https://github.com/davat
 LiteRofi brings full `.rasi` theme compatibility, frosted-glass desktop backdrop blur, an instant `Alt+Space` background daemon, a suite of **15+ built-in native plugins**, **Wallpaper Engine (`ISteamUGC_v020`) & Wallhaven 4K** integration, and a pure-Rust GPU-accelerated **LiteRofi Theme Studio** directly to Windows — with zero external runtime dependencies.
 
 <p align="center">
-  <img src="docs/screenshots/dracula-default.png" alt="LiteRofi Default Theme (Dracula)" width="460" />
-  <img src="docs/screenshots/mango-minimal.png" alt="LiteRofi Mango-Minimal Theme" width="320" />
+  <img src="docs/screenshots/mango-minimal.png" alt="LiteRofi Default Theme (Mango-Minimal)" width="340" />
+  <img src="docs/screenshots/theme-studio.jpg" alt="LiteRofi Theme Studio" width="440" />
 </p>
 
 ## Screenshots
 
 ### Core Launcher, System Menu & Theme Studio
-| Mango-Minimal Launcher (`Alt+Space`) | Unified System Menu (`Ctrl+Alt+Space`) | LiteRofi Theme Studio (`literofi-studio.exe`) |
+| Default Launcher (`mango-minimal`) | Unified System Menu (`Ctrl+Alt+Space`) | Dracula Classic (`-theme dracula_config2`) |
 | :---: | :---: | :---: |
-| <img src="docs/screenshots/mango-minimal.png" alt="Mango Minimal Launcher" width="260" /> | <img src="docs/screenshots/system-menu.png" alt="Unified System Menu" width="260" /> | <img src="docs/screenshots/theme-studio.jpg" alt="LiteRofi Theme Studio" width="340" /> |
+| <img src="docs/screenshots/mango-minimal.png" alt="Mango Minimal Default Launcher" width="260" /> | <img src="docs/screenshots/system-menu.png" alt="Unified System Menu" width="260" /> | <img src="docs/screenshots/dracula-default.png" alt="Dracula Theme" width="320" /> |
 
 ### Built-in Native Plugins & Carousels
 | Game Launcher (`Alt+G`) | Slanted Wallpaper & WE Carousel (`Alt+W`) | Music Player Widget (`Alt+M`) |
@@ -140,7 +140,7 @@ LiteRofi is an independent, from-scratch Windows + Rust reimplementation inspire
 
 Bundled community themes, color palettes, and widget inspirations belong to their respective open-source authors:
 - **[davatorium/rofi](https://github.com/davatorium/rofi)** & **[davatorium/rofi-themes](https://github.com/davatorium/rofi-themes)** — Official Rofi project & classic themes
-- **[dracula/rofi](https://github.com/dracula/rofi)** — Default `dracula_config2` theme
+- **[dracula/rofi](https://github.com/dracula/rofi)** — Bundled `dracula_config2` theme (default theme is built-in `mango-minimal`, matching LiteRofi Theme Studio)
 - **[adi1090x/rofi](https://github.com/adi1090x/rofi)**, **[newmanls/rofi-themes-collection](https://github.com/newmanls/rofi-themes-collection)**, **[catppuccin/rofi](https://github.com/catppuccin/rofi)**, **[gh0stzk/dotfiles](https://github.com/gh0stzk/dotfiles)**, **[mylinuxforwork/dotfiles](https://github.com/mylinuxforwork/dotfiles)** — Community `.rasi` themes
 - **[tinted-theming/base16-rofi](https://github.com/tinted-theming/base16-rofi)** — Base16 color palettes
 - **[niraj998/Rofi-Scripts](https://github.com/niraj998/Rofi-Scripts)** — Visual inspiration for the built-in `music-player.rasi` layout

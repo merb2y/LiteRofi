@@ -164,7 +164,7 @@ begin
       '    daemon-hotkey: "Alt+Space";' + #13#10 +
       '    daemon-mode: "drun";' + #13#10 +
       '}' + #13#10 + #13#10 +
-      '@theme "dracula_config2"' + #13#10;
+      '@theme "mango-minimal"' + #13#10;
     SaveStringToFile(ConfigPath, Content, False);
   end;
 end;

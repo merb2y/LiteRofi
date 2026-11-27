@@ -176,7 +176,7 @@ configuration {
 }
 
 /* Drop any GitHub Rofi .rasi theme into %APPDATA%\LiteRofi\themes\ and select it below */
-@theme "dracula_config2"
+@theme "mango-minimal"
 "@
     [System.IO.File]::WriteAllText($ConfigFile, $StarterConfig, [System.Text.UTF8Encoding]::new($false))
 }
