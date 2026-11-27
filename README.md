@@ -6,7 +6,7 @@ LiteRofi brings full `.rasi` theme compatibility, frosted-glass desktop backdrop
 
 <p align="center">
   <img src="docs/screenshots/mango-minimal.png" alt="LiteRofi Default Theme (Mango-Minimal)" width="340" />
-  <img src="docs/screenshots/theme-studio.jpg" alt="LiteRofi Theme Studio" width="440" />
+  <img src="docs/screenshots/s.jpg" alt="LiteRofi Theme Studio" width="440" />
 </p>
 
 ## Screenshots
