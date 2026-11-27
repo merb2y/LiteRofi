@@ -71,12 +71,14 @@ pub enum UiOutcome {
         index: usize,
     },
     Cancelled,
+    Back,
     ModeSwitch(usize),
 }
 
 /// Complete mutable interactive state for one Rofi window session.
 #[derive(Debug, Clone)]
 pub struct LauncherState {
+    pub markup_rows_override: Option<bool>,
     pub entries: Vec<ListEntry>,
     pub filtered: Vec<usize>,
     pub selected: usize,
@@ -103,6 +105,9 @@ pub struct LauncherState {
     pub only_match: bool,
     pub click_to_exit: bool,
     pub auto_select: bool,
+    pub base_message: Option<String>,
+    pub live_message_fn: Option<fn(&str) -> Option<String>>,
+    pub back_on_empty_backspace: bool,
     compiled_tokens: Vec<TokenMatcher>,
 }
 
@@ -137,6 +142,7 @@ impl LauncherState {
         let cursor_byte = initial_query.len();
 
         let mut st = Self {
+            markup_rows_override: None,
             entries,
             filtered: Vec::new(),
             selected: cfg.selected_row.unwrap_or(0),
@@ -163,6 +169,9 @@ impl LauncherState {
             only_match: cfg.only_match,
             click_to_exit: cfg.click_to_exit,
             auto_select: cfg.auto_select,
+            base_message: cfg.mesg.clone(),
+            live_message_fn: None,
+            back_on_empty_backspace: false,
             compiled_tokens: Vec::new(),
         };
         st.refilter();
@@ -260,6 +269,9 @@ impl LauncherState {
         self.filtered = hits.into_iter().map(|(_, _, idx)| idx).collect();
         self.selected = self.first_selectable().unwrap_or(0);
         self.scroll_offset = 0;
+        if let Some(eval_fn) = self.live_message_fn {
+            self.message = eval_fn(&self.query).or_else(|| self.base_message.clone());
+        }
     }
 
     /// Replaces entry list during an active session (for `script`, `dmenu -multi-select`, or delete).
@@ -535,7 +547,12 @@ impl LauncherState {
             KeyBindingAction::MoveCharForward => self.move_cursor_right(),
             KeyBindingAction::RemoveWordBack => self.remove_word_back(),
             KeyBindingAction::RemoveCharForward => self.delete_forward(),
-            KeyBindingAction::RemoveCharBack => self.backspace(),
+            KeyBindingAction::RemoveCharBack => {
+                if self.query.is_empty() && self.back_on_empty_backspace {
+                    return Some(UiOutcome::Back);
+                }
+                self.backspace();
+            }
             KeyBindingAction::RemoveToEol => self.remove_to_eol(),
             KeyBindingAction::RemoveToSol => self.remove_to_sol(),
 

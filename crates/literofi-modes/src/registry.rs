@@ -1,17 +1,30 @@
 //! Mode parsing, instantiation registry, and headless `--modes-self-test` verification.
 
+use crate::calc::CalcMode;
+use crate::clipboard::ClipboardMode;
 use crate::color_picker::ColorMode;
 use crate::combi::CombiMode;
+use crate::control::ControlMode;
 use crate::dmenu::DmenuMode;
 use crate::drun::DrunMode;
+use crate::emoji::EmojiMode;
 use crate::filebrowser::FileBrowserMode;
+use crate::games::GamesMode;
 use crate::keys::KeysMode;
+use crate::menu::MenuMode;
 use crate::music::MusicMode;
+use crate::power::PowerMode;
 use crate::recursivebrowser::RecursiveBrowserMode;
 use crate::run::RunMode;
 use crate::script::ScriptMode;
+use crate::search::SearchMode;
+use crate::shortcuts::ShortcutsMode;
+use crate::snippets::SnippetsMode;
 use crate::ssh::SshMode;
 use crate::theme_picker::ThemeMode;
+use crate::translate::TranslateMode;
+use crate::wallpaper::WallpaperMode;
+use crate::wallpaper_effects::WallpaperEffectsMode;
 use crate::window::WindowMode;
 use crate::RichMode;
 use literofi_core::config::Config;
@@ -33,6 +46,19 @@ pub enum ModeSpec {
     Theme,
     Colors,
     Music,
+    Power,
+    Games,
+    Wallpaper,
+    WallpaperEffects,
+    Clipboard,
+    Control,
+    Shortcuts,
+    Calc,
+    Emoji,
+    Search,
+    Snippets,
+    Translate,
+    Menu,
     Script { name: String, command: String },
 }
 
@@ -66,6 +92,19 @@ impl ModeSpec {
             "theme" | "themes" => Some(Self::Theme),
             "color" | "colors" | "palette" | "palettes" => Some(Self::Colors),
             "music" | "media" | "player" => Some(Self::Music),
+            "power" | "powermenu" => Some(Self::Power),
+            "games" | "game" | "steam" => Some(Self::Games),
+            "wallpaper" | "wallpapers" | "wall" => Some(Self::Wallpaper),
+            "wallpaper-effects" | "wall-effects" | "walleffects" => Some(Self::WallpaperEffects),
+            "clipboard" | "clip" | "cliphist" => Some(Self::Clipboard),
+            "control" | "control-center" | "cc" => Some(Self::Control),
+            "shortcuts" | "hotkeys" | "cheatsheet" => Some(Self::Shortcuts),
+            "calc" | "calculator" | "math" => Some(Self::Calc),
+            "emoji" | "emojis" | "kaomoji" => Some(Self::Emoji),
+            "search" | "web" | "google" => Some(Self::Search),
+            "snippets" | "snippet" => Some(Self::Snippets),
+            "translate" | "trans" | "tr" => Some(Self::Translate),
+            "menu" | "omarchy" | "system-menu" | "hub" => Some(Self::Menu),
             other => Some(Self::Script {
                 name: other.to_string(),
                 command: trimmed.to_string(),
@@ -88,6 +127,19 @@ impl ModeSpec {
             Self::Theme => "theme",
             Self::Colors => "colors",
             Self::Music => "music",
+            Self::Power => "power",
+            Self::Games => "games",
+            Self::Wallpaper => "wallpaper",
+            Self::WallpaperEffects => "wallpaper-effects",
+            Self::Clipboard => "clipboard",
+            Self::Control => "control",
+            Self::Shortcuts => "shortcuts",
+            Self::Calc => "calc",
+            Self::Emoji => "emoji",
+            Self::Search => "search",
+            Self::Snippets => "snippets",
+            Self::Translate => "translate",
+            Self::Menu => "menu",
             Self::Script { name, .. } => name.as_str(),
         }
     }
@@ -117,6 +169,19 @@ pub fn build_mode(spec: &ModeSpec, cfg: &Config) -> Result<Box<dyn RichMode>, St
         ModeSpec::Theme => Ok(Box::new(ThemeMode::new(cfg))),
         ModeSpec::Colors => Ok(Box::new(ColorMode::new(cfg))),
         ModeSpec::Music => Ok(Box::new(MusicMode::new(cfg))),
+        ModeSpec::Power => Ok(Box::new(PowerMode::new(cfg))),
+        ModeSpec::Games => Ok(Box::new(GamesMode::new(cfg))),
+        ModeSpec::Wallpaper => Ok(Box::new(WallpaperMode::new(cfg))),
+        ModeSpec::WallpaperEffects => Ok(Box::new(WallpaperEffectsMode::new(cfg))),
+        ModeSpec::Clipboard => Ok(Box::new(ClipboardMode::new(cfg))),
+        ModeSpec::Control => Ok(Box::new(ControlMode::new(cfg))),
+        ModeSpec::Shortcuts => Ok(Box::new(ShortcutsMode::new(cfg))),
+        ModeSpec::Calc => Ok(Box::new(CalcMode::new(cfg))),
+        ModeSpec::Emoji => Ok(Box::new(EmojiMode::new(cfg))),
+        ModeSpec::Search => Ok(Box::new(SearchMode::new(cfg))),
+        ModeSpec::Snippets => Ok(Box::new(SnippetsMode::new(cfg))),
+        ModeSpec::Translate => Ok(Box::new(TranslateMode::new(cfg))),
+        ModeSpec::Menu => Ok(Box::new(MenuMode::new(cfg))),
         ModeSpec::Script { name, command } => Ok(Box::new(ScriptMode::new(
             name.clone(),
             command.clone(),

@@ -7,12 +7,66 @@ use literofi_core::cli::split_shell_argv;
 use literofi_core::config::Config;
 use literofi_core::protocol::parse_dmenu_script_stream;
 use literofi_render::state::{ListEntry, UiOutcome};
+#[cfg(windows)]
+use std::io::Read;
+use std::path::Path;
 use std::process::Command;
+
+fn script_command(program: &str) -> Result<Command, String> {
+    #[cfg(windows)]
+    {
+        let mut path = Path::new(program).to_owned();
+        if path.components().count() == 1 && !path.is_file() {
+            if let Some(root) = std::env::var_os("APPDATA") {
+                let scripts = Path::new(&root).join("LiteRofi/scripts");
+                for suffix in ["", ".sh", ".ps1", ".exe", ".cmd", ".bat"] {
+                    let candidate = scripts.join(format!("{program}{suffix}"));
+                    if candidate.is_file() {
+                        path = candidate;
+                        break;
+                    }
+                }
+            }
+        }
+        let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("");
+        if ext.eq_ignore_ascii_case("ps1") {
+            let mut cmd = Command::new("powershell.exe");
+            cmd.args(["-NoProfile", "-File"]).arg(&path);
+            return Ok(cmd);
+        }
+        let mut prefix = [0; 256];
+        let bash_shebang = ext.is_empty()
+            && std::fs::File::open(&path)
+                .and_then(|mut file| file.read(&mut prefix))
+                .ok()
+                .and_then(|n| std::str::from_utf8(prefix[..n].split(|b| *b == b'\n').next()?).ok())
+                .and_then(|line| line.strip_prefix("#!"))
+                .is_some_and(|line| {
+                    line.split_whitespace()
+                        .any(|word| matches!(word.rsplit('/').next(), Some("bash" | "sh")))
+                });
+        if bash_shebang || ext.eq_ignore_ascii_case("sh") || ext.eq_ignore_ascii_case("bash") {
+            let bash = std::env::var_os("LITEROFI_BASH").map(std::path::PathBuf::from)
+                .or_else(|| ["ProgramW6432", "ProgramFiles", "LOCALAPPDATA"].iter()
+                    .filter_map(std::env::var_os)
+                    .flat_map(|p| [Path::new(&p).join("Git/bin/bash.exe"), Path::new(&p).join("Programs/Git/bin/bash.exe")])
+                    .find(|p| p.is_file()))
+                .ok_or("Git Bash was not found. Install Git for Windows or set LITEROFI_BASH to bash.exe.")?;
+            let mut cmd = Command::new(bash);
+            cmd.arg("--").arg(path.to_string_lossy().replace('\\', "/"));
+            return Ok(cmd);
+        }
+        return Ok(Command::new(path));
+    }
+    #[cfg(not(windows))]
+    Ok(Command::new(program))
+}
 
 /// Stateful custom `script` switcher mode (`name:command`).
 pub struct ScriptMode {
     mode_name: String,
     command: String,
+    markup_rows: Option<bool>,
     delim: u8,
     entries: Vec<ListEntry>,
     message: Option<String>,
@@ -29,6 +83,7 @@ impl ScriptMode {
         Self {
             mode_name: name,
             command,
+            markup_rows: None,
             delim: cfg.sep,
             entries: Vec::new(),
             message: cfg.mesg.clone(),
@@ -48,7 +103,11 @@ impl ScriptMode {
         entry_info: Option<&str>,
         input: Option<&str>,
     ) -> Result<Option<ModeStep>, String> {
-        let mut argv = split_shell_argv(&self.command)?;
+        let argv = if std::path::Path::new(&self.command).is_file() {
+            vec![self.command.clone()]
+        } else {
+            split_shell_argv(&self.command)?
+        };
         if argv.is_empty() {
             return Err(format!(
                 "empty script command for mode `{}`",
@@ -56,7 +115,19 @@ impl ScriptMode {
             ));
         }
 
-        let mut cmd = Command::new(&argv[0]);
+        let mut cmd = script_command(&argv[0])?;
+        if let Some(dir) = std::env::current_exe()
+            .ok()
+            .and_then(|p| p.parent().map(Path::to_owned))
+        {
+            let mut paths = vec![dir];
+            paths.extend(std::env::split_paths(
+                &std::env::var_os("PATH").unwrap_or_default(),
+            ));
+            if let Ok(path) = std::env::join_paths(paths) {
+                cmd.env("PATH", path);
+            }
+        }
         if argv.len() > 1 {
             cmd.args(&argv[1..]);
         }
@@ -76,44 +147,23 @@ impl ScriptMode {
             cmd.env("ROFI_INPUT", inp);
         }
 
-        let output = match cmd.output() {
-            Ok(o) => o,
-            Err(first_err) => {
-                // On Windows retry `.cmd`/`.bat` or shell snippets via `cmd /C`
-                #[cfg(windows)]
-                {
-                    if let Some(a) = arg {
-                        argv.push(format!("\"{}\"", a.replace('"', "\\\"")));
-                    }
-                    let mut sh = Command::new("cmd.exe");
-                    sh.args(["/C", &argv.join(" ")]);
-                    sh.env("ROFI_RETV", retv.to_string());
-                    sh.env("ROFI_OUTSIDE", std::process::id().to_string());
-                    if let Some(info) = entry_info {
-                        sh.env("ROFI_INFO", info);
-                    }
-                    if let Some(data) = &self.data {
-                        sh.env("ROFI_DATA", data);
-                    }
-                    if let Some(inp) = input {
-                        sh.env("ROFI_INPUT", inp);
-                    }
-                    sh.output().map_err(|_| {
-                        format!("failed to execute script `{}`: {first_err}", self.command)
-                    })?
-                }
-                #[cfg(not(windows))]
-                {
-                    return Err(format!(
-                        "failed to execute script `{}`: {first_err}",
-                        self.command
-                    ));
-                }
-            }
-        };
+        let output = cmd
+            .output()
+            .map_err(|e| format!("Failed to start {}: {e}", self.command))?;
+        if !output.status.success() {
+            return Err(format!(
+                "{} ({}): {}",
+                self.command,
+                output.status,
+                String::from_utf8_lossy(&output.stderr).trim()
+            ));
+        }
 
         let (headers, parsed) = parse_dmenu_script_stream(&output.stdout, self.delim);
         self.delim = headers.delim;
+        if let Some(markup) = headers.markup_rows {
+            self.markup_rows = Some(markup);
+        }
         if headers.message.is_some() {
             self.message = headers.message;
         }
@@ -189,6 +239,10 @@ impl RichMode for ScriptMode {
         self.prompt_override.clone()
     }
 
+    fn markup_rows_override(&self) -> Option<bool> {
+        self.markup_rows
+    }
+
     fn theme_snippets(&self) -> Vec<String> {
         self.theme_snippets.clone()
     }
@@ -254,6 +308,7 @@ impl RichMode for ScriptMode {
             }
             UiOutcome::Cancelled => Ok(ModeStep::Exit(1)),
             UiOutcome::ModeSwitch(idx) => Ok(ModeStep::SwitchModeIndex(*idx)),
+            UiOutcome::Back => Ok(ModeStep::Reload),
         }
     }
 }

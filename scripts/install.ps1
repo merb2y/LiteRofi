@@ -91,6 +91,7 @@ foreach ($procName in @("literofi", "literofi-studio")) {
 
 # Copy main binaries and companion files
 Copy-Item -LiteralPath $ExeSource -Destination (Join-Path $InstallDir "literofi.exe") -Force
+Copy-Item -LiteralPath $ExeSource -Destination (Join-Path $InstallDir "rofi.exe") -Force
 if (-not [string]::IsNullOrWhiteSpace($StudioSource) -and (Test-Path -LiteralPath $StudioSource)) {
     Copy-Item -LiteralPath $StudioSource -Destination (Join-Path $InstallDir "literofi-studio.exe") -Force
 }
@@ -100,6 +101,15 @@ if (-not (Test-Path -LiteralPath $StudioIcoSrc)) {
 }
 if (Test-Path -LiteralPath $StudioIcoSrc) {
     Copy-Item -LiteralPath $StudioIcoSrc -Destination (Join-Path $InstallDir "studio.ico") -Force
+}
+$IconsSrc = Join-Path $PayloadRoot "icons"
+if (-not (Test-Path -LiteralPath $IconsSrc)) {
+    $IconsSrc = Join-Path (Split-Path -Parent $PSScriptRoot) "studio\icons"
+}
+$IconsDest = Join-Path $InstallDir "icons"
+if (Test-Path -LiteralPath $IconsSrc) {
+    New-Item -ItemType Directory -Path $IconsDest -Force | Out-Null
+    Copy-Item -LiteralPath (Join-Path $IconsSrc "*.ico") -Destination $IconsDest -Force
 }
 foreach ($extra in @("uninstall.ps1", "README.md", "LICENSE")) {
     $src = Join-Path $PayloadRoot $extra
@@ -205,18 +215,27 @@ if (-not $NoShortcuts) {
     $StudioPath = Join-Path $InstallDir "literofi-studio.exe"
     $StudioIcoPath = Join-Path $InstallDir "studio.ico"
     $StudioIconLoc = if (Test-Path -LiteralPath $StudioIcoPath) { "$StudioIcoPath,0" } else { "$ExePath,0" }
+    function Resolve-IconLoc([string]$IcoName) {
+        $p = Join-Path $InstallDir "icons\$IcoName"
+        if (Test-Path -LiteralPath $p) { return "$p,0" }
+        return "$ExePath,0"
+    }
     $UninstallPath = Join-Path $InstallDir "uninstall.ps1"
 
     $Shortcuts = @(
-        @{ Name = "LiteRofi.lnk"; Target = $ExePath; Args = "-show drun"; Desc = "Launch LiteRofi application launcher"; Style = 7; Icon = "$ExePath,0" },
-        @{ Name = "LiteRofi Launchpad.lnk"; Target = $ExePath; Args = "-show drun -theme launchpad"; Desc = "Launch LiteRofi 4x3 Launchpad grid"; Style = 7; Icon = "$ExePath,0" },
-        @{ Name = "LiteRofi Daemon.lnk"; Target = $ExePath; Args = "--start-daemon"; Desc = "Start LiteRofi background hotkey daemon (Alt+Space)"; Style = 7; Icon = "$ExePath,0" },
-        @{ Name = "LiteRofi Theme Selector.lnk"; Target = $ExePath; Args = "-show theme"; Desc = "Choose and switch active LiteRofi .rasi theme"; Style = 7; Icon = "$ExePath,0" },
-        @{ Name = "LiteRofi Color Palette.lnk"; Target = $ExePath; Args = "-show colors"; Desc = "Choose and preview LiteRofi color palettes"; Style = 7; Icon = "$ExePath,0" },
-        @{ Name = "LiteRofi Music.lnk"; Target = $ExePath; Args = "-show music -theme music-player"; Desc = "Control Spotify, YouTube Music, and system media playback"; Style = 7; Icon = "$ExePath,0" },
-        @{ Name = "LiteRofi Settings.lnk"; Target = $ExePath; Args = "--settings"; Desc = "Open LiteRofi config.rasi settings and hotkeys"; Style = 7; Icon = "$ExePath,0" },
-        @{ Name = "LiteRofi Themes Folder.lnk"; Target = $ExePath; Args = "--themes-dir"; Desc = "Open LiteRofi themes folder"; Style = 7; Icon = "$ExePath,0" },
-        @{ Name = "Uninstall LiteRofi.lnk"; Target = "powershell.exe"; Args = "-NoProfile -ExecutionPolicy Bypass -File `"$UninstallPath`""; Desc = "Uninstall LiteRofi"; Style = 1; Icon = "$ExePath,0" }
+        @{ Name = "LiteRofi.lnk"; Target = $ExePath; Args = "-show drun"; Desc = "Launch LiteRofi application launcher"; Style = 7; Icon = (Resolve-IconLoc "literofi.ico") },
+        @{ Name = "LiteRofi System Menu.lnk"; Target = $ExePath; Args = "-show menu"; Desc = "Open LiteRofi unified system menu (Ctrl+Alt+Space)"; Style = 7; Icon = (Resolve-IconLoc "literofi.ico") },
+        @{ Name = "LiteRofi Launchpad.lnk"; Target = $ExePath; Args = "-show drun -theme launchpad"; Desc = "Launch LiteRofi 4x3 Launchpad grid"; Style = 7; Icon = (Resolve-IconLoc "literofi.ico") },
+        @{ Name = "LiteRofi Daemon.lnk"; Target = $ExePath; Args = "--start-daemon"; Desc = "Start LiteRofi background hotkey daemon (Alt+Space)"; Style = 7; Icon = (Resolve-IconLoc "literofi.ico") },
+        @{ Name = "LiteRofi Theme Selector.lnk"; Target = $ExePath; Args = "-show theme"; Desc = "Choose and switch active LiteRofi .rasi theme"; Style = 7; Icon = (Resolve-IconLoc "themes.ico") },
+        @{ Name = "LiteRofi Color Palette.lnk"; Target = $ExePath; Args = "-show colors"; Desc = "Choose and preview LiteRofi color palettes"; Style = 7; Icon = (Resolve-IconLoc "palette.ico") },
+        @{ Name = "LiteRofi Wallpaper.lnk"; Target = $ExePath; Args = "-show wallpaper"; Desc = "Open LiteRofi slanted wallpaper carousel (Alt+W)"; Style = 7; Icon = (Resolve-IconLoc "themes.ico") },
+        @{ Name = "LiteRofi Music.lnk"; Target = $ExePath; Args = "-show music -theme music-player"; Desc = "Control Spotify, YouTube Music, and system media playback"; Style = 7; Icon = (Resolve-IconLoc "music.ico") },
+        @{ Name = "LiteRofi Power Menu.lnk"; Target = $ExePath; Args = "-show power -theme powermenu"; Desc = "Lock, Suspend, Logout, Reboot, or Shutdown Windows"; Style = 7; Icon = (Resolve-IconLoc "power.ico") },
+        @{ Name = "LiteRofi Games.lnk"; Target = $ExePath; Args = "-show games -theme game-launcher"; Desc = "Browse and launch installed Steam & Epic games with cover art"; Style = 7; Icon = (Resolve-IconLoc "games.ico") },
+        @{ Name = "LiteRofi Settings.lnk"; Target = $ExePath; Args = "--settings"; Desc = "Open LiteRofi config.rasi settings and hotkeys"; Style = 7; Icon = (Resolve-IconLoc "settings.ico") },
+        @{ Name = "LiteRofi Themes Folder.lnk"; Target = $ExePath; Args = "--themes-dir"; Desc = "Open LiteRofi themes folder"; Style = 7; Icon = (Resolve-IconLoc "settings.ico") },
+        @{ Name = "Uninstall LiteRofi.lnk"; Target = "powershell.exe"; Args = "-NoProfile -ExecutionPolicy Bypass -File `"$UninstallPath`""; Desc = "Uninstall LiteRofi"; Style = 1; Icon = (Resolve-IconLoc "literofi.ico") }
     )
     if (Test-Path -LiteralPath $StudioPath) {
         $Shortcuts += @{ Name = "LiteRofi Theme Studio.lnk"; Target = $StudioPath; Args = ""; Desc = "Visual Theme & Color Palette Gallery for LiteRofi"; Style = 1; Icon = $StudioIconLoc }

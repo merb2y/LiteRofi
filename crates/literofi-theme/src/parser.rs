@@ -299,6 +299,29 @@ impl<'a> Parser<'a> {
                 {
                     Ok(())
                 } else {
+                    // A profile named config.rasi may select themes/config.rasi by its short name.
+                    if self.import_stack.len() == 1 && Path::new(&target).components().count() == 1
+                    {
+                        if let Some(profile) = self.import_stack.first() {
+                            let selected = Path::new(&target).with_extension("rasi");
+                            if profile
+                                .file_name()
+                                .zip(selected.file_name())
+                                .is_some_and(|(a, b)| a.eq_ignore_ascii_case(b))
+                            {
+                                if let Some(dir) = &self.current_dir {
+                                    let nested = Path::new("themes").join(&selected);
+                                    if dir.join(&nested).is_file() {
+                                        return self.load_import(
+                                            &nested.to_string_lossy(),
+                                            false,
+                                            sheet,
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    }
                     self.load_import(&target, false, sheet)
                 }
             }
@@ -373,7 +396,8 @@ impl<'a> Parser<'a> {
         let src = std::fs::read_to_string(&path)
             .map_err(|e| self.err_here(format!("failed to read `{}`: {e}", path.display())))?;
         self.import_stack.push(canon);
-        let res = parse_into_sheet(sheet, &src, Some(&path), self.opts, self.import_stack);
+        let res = parse_into_sheet(sheet, &src, Some(&path), self.opts, self.import_stack)
+            .map_err(|error| self.err_here(format!("importing {target}: {error}")));
         self.import_stack.pop();
         res
     }
@@ -893,6 +917,14 @@ impl<'a> Parser<'a> {
             ImageScale::None
         };
         self.expect_rparen()?;
+        let url = self
+            .current_dir
+            .as_ref()
+            .filter(|_| Path::new(&url).is_relative())
+            .map(|dir| dir.join(&url))
+            .filter(|path| path.is_file())
+            .map(|path| path.to_string_lossy().into_owned())
+            .unwrap_or(url);
         Ok(PropertyValue::Image(ImageValue::Url { url, scale }))
     }
 

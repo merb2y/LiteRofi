@@ -15,6 +15,7 @@ pub struct DmenuMode {
     entries: Vec<ListEntry>,
     selected_set: BTreeSet<usize>,
     base_active: Vec<bool>,
+    markup_rows: Option<bool>,
     prompt_override: Option<String>,
     message: Option<String>,
     no_custom_override: Option<bool>,
@@ -34,6 +35,7 @@ impl DmenuMode {
             entries: Vec::new(),
             selected_set: BTreeSet::new(),
             base_active: Vec::new(),
+            markup_rows: None,
             prompt_override: None,
             message: cfg.mesg.clone(),
             no_custom_override: None,
@@ -125,6 +127,7 @@ impl RichMode for DmenuMode {
         };
 
         let (headers, parsed) = parse_dmenu_script_stream(&raw_bytes, self.cfg.sep);
+        self.markup_rows = headers.markup_rows;
         if let Some(p) = headers.prompt {
             self.prompt_override = Some(p);
         }
@@ -192,6 +195,10 @@ impl RichMode for DmenuMode {
 
     fn theme_snippets(&self) -> Vec<String> {
         self.theme_snippets.clone()
+    }
+
+    fn markup_rows_override(&self) -> Option<bool> {
+        self.markup_rows
     }
 
     fn no_custom_override(&self) -> Option<bool> {
@@ -277,6 +284,7 @@ impl RichMode for DmenuMode {
             }
             UiOutcome::Cancelled => Ok(ModeStep::Exit(1)),
             UiOutcome::ModeSwitch(idx) => Ok(ModeStep::SwitchModeIndex(*idx)),
+            UiOutcome::Back => Ok(ModeStep::Reload),
         }
     }
 }

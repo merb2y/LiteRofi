@@ -97,7 +97,15 @@ pub fn apply_theme_to_config(config_path: &Path, theme_name: &str) -> Result<(),
         "configuration {\n    modes: \"drun,run,window,combi,filebrowser,keys\";\n    show-icons: true;\n    font: \"Segoe UI 11\";\n    drun-display-format: \"{name}\";\n    daemon-hotkey: \"Alt+Space\";\n    daemon-mode: \"drun\";\n}\n".to_string()
     });
     let clean = existing.strip_prefix('\u{FEFF}').unwrap_or(&existing);
-    let directive = format!("@theme \"{theme_name}\"");
+    let selected = if config_path
+        .file_stem()
+        .is_some_and(|s| s.eq_ignore_ascii_case(theme_name))
+    {
+        format!("themes/{theme_name}.rasi")
+    } else {
+        theme_name.to_owned()
+    };
+    let directive = format!("@theme \"{selected}\"");
 
     let mut replaced = false;
     let mut out_lines: Vec<String> = Vec::new();

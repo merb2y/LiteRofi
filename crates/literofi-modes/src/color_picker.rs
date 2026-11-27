@@ -459,19 +459,234 @@ impl ColorMode {
 
     fn write_palette(&mut self, palette: &ColorPalette) -> Result<(), String> {
         self.snapshot_backups_once();
-        let (wallust, adi_paths) = self.target_paths();
-        if let Some(parent) = wallust.parent() {
-            std::fs::create_dir_all(parent)
-                .map_err(|e| format!("failed to create {}: {e}", parent.display()))?;
-        }
-        std::fs::write(&wallust, format_wallust_rasi(palette))
-            .map_err(|e| format!("failed to write {}: {e}", wallust.display()))?;
-        let adi_text = format_adi_colors_rasi(palette);
-        for p in adi_paths {
-            let _ = std::fs::write(&p, &adi_text);
-        }
-        Ok(())
+        apply_palette_to_root(&self.config_root, palette)
     }
+}
+
+/// Applies `palette` directly to `wallust/colors-rofi.rasi` and any `launchers/*/shared/colors.rasi`
+/// under `config_root` (used by both `ColorMode` and `WallpaperMode`'s Auto-Theme action).
+pub fn apply_palette_to_root(config_root: &Path, palette: &ColorPalette) -> Result<(), String> {
+    let wallust = config_root.join("wallust").join("colors-rofi.rasi");
+    if let Some(parent) = wallust.parent() {
+        std::fs::create_dir_all(parent)
+            .map_err(|e| format!("failed to create {}: {e}", parent.display()))?;
+    }
+    std::fs::write(&wallust, format_wallust_rasi(palette))
+        .map_err(|e| format!("failed to write {}: {e}", wallust.display()))?;
+
+    let adi_text = format_adi_colors_rasi(palette);
+    let launchers = config_root.join("launchers");
+    if let Ok(rd) = std::fs::read_dir(&launchers) {
+        for ent in rd.flatten() {
+            let shared = ent.path().join("shared").join("colors.rasi");
+            if shared.is_file() {
+                let _ = std::fs::write(&shared, &adi_text);
+            }
+        }
+    }
+
+    sync_wallust_templates(config_root, palette);
+    Ok(())
+}
+
+/// Renders Wallust/Pywal-style color artifacts (`colors.json`, `vscode-colors.json`,
+/// `windows-terminal-scheme.json`) and expands any user templates under
+/// `%APPDATA%\LiteRofi\templates\` (`{{bg}}`, `{{bg_alt}}`, `{{fg}}`, `{{accent}}`,
+/// `{{active}}`, `{{urgent}}`, `{{border}}`) into `%APPDATA%\LiteRofi\generated\`.
+pub fn sync_wallust_templates(config_root: &Path, p: &ColorPalette) {
+    let gen_dir = config_root.join("generated");
+    if std::fs::create_dir_all(&gen_dir).is_err() {
+        return;
+    }
+
+    // 1. Pywal/Wallust-compatible colors.json
+    let colors_json = format!(
+        "{{\n  \"name\": \"{}\",\n  \"special\": {{\n    \"background\": \"{}\",\n    \"backgroundAlt\": \"{}\",\n    \"foreground\": \"{}\",\n    \"accent\": \"{}\",\n    \"active\": \"{}\",\n    \"urgent\": \"{}\",\n    \"border\": \"{}\"\n  }}\n}}\n",
+        p.name.replace('"', "\\\""),
+        p.bg,
+        p.bg_alt,
+        p.fg,
+        p.selected,
+        p.active,
+        p.urgent,
+        p.border
+    );
+    let _ = std::fs::write(gen_dir.join("colors.json"), colors_json);
+
+    // 2. Ready-to-use VS Code workbench.colorCustomizations snippet
+    let vscode_json = format!(
+        "{{\n  \"workbench.colorCustomizations\": {{\n    \"editor.background\": \"{}\",\n    \"sideBar.background\": \"{}\",\n    \"activityBar.background\": \"{}\",\n    \"statusBar.background\": \"{}\",\n    \"focusBorder\": \"{}\",\n    \"editor.foreground\": \"{}\"\n  }}\n}}\n",
+        p.bg, p.bg_alt, p.bg, p.selected, p.selected, p.fg
+    );
+    let _ = std::fs::write(gen_dir.join("vscode-colors.json"), vscode_json);
+
+    // 3. Ready-to-use Windows Terminal color scheme
+    let wt_json = format!(
+        "{{\n  \"name\": \"LiteRofi\",\n  \"background\": \"{}\",\n  \"foreground\": \"{}\",\n  \"cursorColor\": \"{}\",\n  \"selectionBackground\": \"{}\",\n  \"black\": \"{}\",\n  \"red\": \"{}\",\n  \"green\": \"{}\",\n  \"blue\": \"{}\",\n  \"purple\": \"{}\",\n  \"white\": \"{}\"\n}}\n",
+        p.bg, p.fg, p.selected, p.bg_alt, p.bg, p.urgent, p.active, p.selected, p.border, p.fg
+    );
+    let _ = std::fs::write(gen_dir.join("windows-terminal-scheme.json"), wt_json);
+
+    // 4. Ready-to-use Limusic matugen.css (also synced live to %APPDATA%\limusic\matugen.css if present)
+    let limusic_css = format_limusic_matugen_css(p);
+    let _ = std::fs::write(gen_dir.join("limusic-matugen.css"), &limusic_css);
+    if let Ok(appdata) = std::env::var("APPDATA") {
+        let limusic_dir = PathBuf::from(appdata).join("limusic");
+        if limusic_dir.is_dir() {
+            let _ = std::fs::write(limusic_dir.join("matugen.css"), &limusic_css);
+        }
+    }
+
+    // 5. Expand custom user templates in %APPDATA%\LiteRofi\templates\*
+    let tpl_dir = config_root.join("templates");
+    if let Ok(rd) = std::fs::read_dir(&tpl_dir) {
+        for ent in rd.flatten() {
+            let path = ent.path();
+            if !path.is_file() {
+                continue;
+            }
+            if let Ok(raw) = std::fs::read_to_string(&path) {
+                let expanded = expand_palette_template(&raw, p);
+                if let Some(fname) = path.file_name() {
+                    let _ = std::fs::write(gen_dir.join(fname), expanded);
+                }
+            }
+        }
+    }
+}
+
+fn darken_hex(hex: &str, amount: f32) -> String {
+    let s = hex.trim().trim_start_matches('#');
+    if s.len() != 6 {
+        return hex.to_string();
+    }
+    let (Ok(r), Ok(g), Ok(b)) = (
+        u8::from_str_radix(&s[0..2], 16),
+        u8::from_str_radix(&s[2..4], 16),
+        u8::from_str_radix(&s[4..6], 16),
+    ) else {
+        return hex.to_string();
+    };
+    let factor = (1.0 - amount).clamp(0.0, 1.0);
+    format!(
+        "#{:02x}{:02x}{:02x}",
+        (f32::from(r) * factor).round() as u8,
+        (f32::from(g) * factor).round() as u8,
+        (f32::from(b) * factor).round() as u8,
+    )
+}
+
+/// Generates a Limusic-compatible `matugen.css` stylesheet from the active LiteRofi palette.
+pub fn format_limusic_matugen_css(p: &ColorPalette) -> String {
+    let card = darken_hex(&p.bg, 0.06);
+    let surface_low = darken_hex(&p.bg, 0.03);
+    let popover = darken_hex(&p.bg, 0.12);
+    let muted_text = darken_hex(&p.fg, 0.30);
+    let border = darken_hex(&p.fg, 0.40);
+    let outline = darken_hex(&p.fg, 0.30);
+
+    let dark_bg = darken_hex(&p.bg, 0.35);
+    let dark_border = darken_hex(&dark_bg, 0.15);
+    let dark_outline = darken_hex(&dark_bg, 0.10);
+    let dark_card = darken_hex(&dark_bg, 0.08);
+    let dark_popover = darken_hex(&dark_bg, 0.14);
+    let dark_muted_text = darken_hex(&p.fg, 0.50);
+    let dark_secondary = darken_hex(&p.border, 0.20);
+
+    format!(
+        "/* LiteRofi Wallust -> Limusic theme ({name}) */\n\
+html.matugen-theme {{\n\
+\t--background: {bg};\n\
+\t--foreground: {fg};\n\
+\t--card: {card};\n\
+\t--card-foreground: {fg};\n\
+\t--popover: {popover};\n\
+\t--popover-foreground: {fg};\n\
+\t--primary: {primary};\n\
+\t--primary-foreground: {bg};\n\
+\t--accent: {primary};\n\
+\t--accent-foreground: {bg};\n\
+\t--secondary: {secondary};\n\
+\t--secondary-foreground: {fg};\n\
+\t--muted: {surface_low};\n\
+\t--muted-foreground: {muted_text};\n\
+\t--destructive: {urgent};\n\
+\t--destructive-foreground: {bg};\n\
+\t--border: {border};\n\
+\t--input: {border};\n\
+\t--outline: {outline};\n\
+\t--ring: {primary};\n\
+\t--chart-1: {primary};\n\
+\t--chart-2: {secondary};\n\
+\t--chart-3: {active};\n\
+\t--chart-4: {urgent};\n\
+\t--chart-5: {outline};\n\
+\t--sidebar: {bg};\n\
+\t--sidebar-foreground: {fg};\n\
+\t--sidebar-primary: {primary};\n\
+\t--sidebar-primary-foreground: {bg};\n\
+\t--sidebar-accent: {card};\n\
+\t--sidebar-accent-foreground: {fg};\n\
+\t--sidebar-border: {border};\n\
+\t--sidebar-ring: {primary};\n\
+}}\n\n\
+html.matugen-theme.dark {{\n\
+\t--background: {dark_bg};\n\
+\t--foreground: {fg};\n\
+\t--card: {dark_card};\n\
+\t--card-foreground: {fg};\n\
+\t--popover: {dark_popover};\n\
+\t--popover-foreground: {fg};\n\
+\t--primary: {primary};\n\
+\t--primary-foreground: {dark_bg};\n\
+\t--accent: {primary};\n\
+\t--accent-foreground: {dark_bg};\n\
+\t--secondary: {dark_secondary};\n\
+\t--secondary-foreground: {fg};\n\
+\t--muted: {dark_card};\n\
+\t--muted-foreground: {dark_muted_text};\n\
+\t--destructive: {urgent};\n\
+\t--destructive-foreground: {dark_bg};\n\
+\t--border: {dark_border};\n\
+\t--input: {dark_border};\n\
+\t--outline: {dark_outline};\n\
+\t--ring: {primary};\n\
+\t--chart-1: {primary};\n\
+\t--chart-2: {dark_secondary};\n\
+\t--chart-3: {active};\n\
+\t--chart-4: {urgent};\n\
+\t--chart-5: {dark_outline};\n\
+\t--sidebar: {dark_bg};\n\
+\t--sidebar-foreground: {fg};\n\
+\t--sidebar-primary: {primary};\n\
+\t--sidebar-primary-foreground: {dark_bg};\n\
+\t--sidebar-accent: {dark_card};\n\
+\t--sidebar-accent-foreground: {fg};\n\
+\t--sidebar-border: {dark_border};\n\
+\t--sidebar-ring: {primary};\n\
+}}\n",
+        name = p.name,
+        bg = p.bg,
+        fg = p.fg,
+        primary = p.selected,
+        secondary = p.border,
+        active = p.active,
+        urgent = p.urgent,
+    )
+}
+
+pub fn expand_palette_template(template: &str, p: &ColorPalette) -> String {
+    template
+        .replace("{{bg}}", &p.bg)
+        .replace("{{bg_alt}}", &p.bg_alt)
+        .replace("{{fg}}", &p.fg)
+        .replace("{{accent}}", &p.selected)
+        .replace("{{selected}}", &p.selected)
+        .replace("{{active}}", &p.active)
+        .replace("{{urgent}}", &p.urgent)
+        .replace("{{border}}", &p.border)
+        .replace("{{bg_rgba}}", &p.bg_rgba)
+        .replace("{{name}}", &p.name)
 }
 
 fn default_config_root() -> PathBuf {
@@ -591,5 +806,35 @@ impl RichMode for ColorMode {
             }
             _ => Ok(ModeStep::Exit(0)),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sync_wallust_templates_generates_limusic_matugen_css() {
+        let dir = std::env::temp_dir().join(format!("literofi-limusic-css-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        let p = ColorPalette {
+            name: "Rembrandt Dark".into(),
+            bg: "#080706".into(),
+            bg_rgba: "rgba(8,7,6,0.96)".into(),
+            bg_alt: "#141210".into(),
+            fg: "#d8ccb8".into(),
+            selected: "#c8a97e".into(),
+            active: "#b5bd68".into(),
+            urgent: "#cc6666".into(),
+            border: "#a89984".into(),
+        };
+        sync_wallust_templates(&dir, &p);
+        let css = std::fs::read_to_string(dir.join("generated").join("limusic-matugen.css"))
+            .expect("limusic-matugen.css generated");
+        assert!(css.contains("html.matugen-theme {"));
+        assert!(css.contains("html.matugen-theme.dark {"));
+        assert!(css.contains("--primary: #c8a97e;"));
+        assert!(css.contains("--foreground: #d8ccb8;"));
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

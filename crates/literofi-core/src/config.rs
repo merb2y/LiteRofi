@@ -130,6 +130,8 @@ pub struct Config {
     pub element_height: i32,
     pub sidebar_mode: bool,
     pub hover_select: bool,
+    pub me_select_entry: String,
+    pub me_accept_entry: String,
     pub auto_select: bool,
     pub parse_hosts: bool,
     pub parse_known_hosts: bool,
@@ -208,6 +210,7 @@ pub struct Config {
     pub stop_daemon: bool,
     pub daemon_hotkey: String,
     pub daemon_hotkey_set: bool,
+    pub daemon_hotkeys: Vec<String>,
     pub daemon_mode: String,
     pub daemon_mode_set: bool,
     pub daemon_self_test: bool,
@@ -247,7 +250,9 @@ impl Default for Config {
             cycle: true,
             element_height: 1,
             sidebar_mode: false,
-            hover_select: false,
+            hover_select: true,
+            me_select_entry: String::new(),
+            me_accept_entry: "MousePrimary".to_string(),
             auto_select: false,
             parse_hosts: false,
             parse_known_hosts: true,
@@ -326,6 +331,21 @@ impl Default for Config {
             stop_daemon: false,
             daemon_hotkey: "Alt+Space".to_string(),
             daemon_hotkey_set: false,
+            daemon_hotkeys: vec![
+                "Ctrl+Alt+Space=menu".to_string(),
+                "Alt+G=games:game-launcher".to_string(),
+                "Alt+M=music:music-player".to_string(),
+                "Alt+P=power:powermenu".to_string(),
+                "Alt+W=wallpaper:wallpaper-picker".to_string(),
+                "Alt+Shift+W=wallpaper-effects".to_string(),
+                "Alt+V=clipboard:clipboard".to_string(),
+                "Alt+D=control:control-center".to_string(),
+                "Alt+C=calc".to_string(),
+                "Alt+E=emoji".to_string(),
+                "Alt+S=search".to_string(),
+                "Alt+N=snippets".to_string(),
+                "Alt+T=translate".to_string(),
+            ],
             daemon_mode: "drun".to_string(),
             daemon_mode_set: false,
             daemon_self_test: false,
@@ -422,6 +442,16 @@ impl Config {
         let _ = writeln!(out, "\tcycle: {};", self.cycle);
         let _ = writeln!(out, "\tsidebar-mode: {};", self.sidebar_mode);
         let _ = writeln!(out, "\thover-select: {};", self.hover_select);
+        let _ = writeln!(
+            out,
+            "\tme-select-entry: \"{}\";",
+            escape_rasi_str(&self.me_select_entry)
+        );
+        let _ = writeln!(
+            out,
+            "\tme-accept-entry: \"{}\";",
+            escape_rasi_str(&self.me_accept_entry)
+        );
         let _ = writeln!(out, "\teh: {};", self.element_height);
         let _ = writeln!(out, "\tauto-select: {};", self.auto_select);
         let _ = writeln!(out, "\tparse-hosts: {};", self.parse_hosts);

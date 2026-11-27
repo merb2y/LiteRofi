@@ -312,6 +312,7 @@ impl RichMode for SshMode {
             }
             UiOutcome::Cancelled => Ok(ModeStep::Exit(1)),
             UiOutcome::ModeSwitch(idx) => Ok(ModeStep::SwitchModeIndex(*idx)),
+            UiOutcome::Back => Ok(ModeStep::Reload),
         }
     }
 }
@@ -405,10 +406,18 @@ fn parse_ssh_config_file(
 }
 
 fn strip_inline_comment(line: &str) -> &str {
-    match line.find('#') {
-        Some(idx) => &line[..idx],
-        None => line,
+    let mut quoted = false;
+    let mut word_start = true;
+    for (i, ch) in line.char_indices() {
+        if ch == '"' {
+            quoted = !quoted;
+        }
+        if ch == '#' && !quoted && word_start {
+            return &line[..i];
+        }
+        word_start = ch.is_whitespace();
     }
+    line
 }
 
 fn split_ssh_kv_tokens(line: &str) -> Vec<String> {

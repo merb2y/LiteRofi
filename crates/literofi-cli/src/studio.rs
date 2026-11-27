@@ -441,9 +441,34 @@ fn save_favorites(path: &Path, favs: &HashSet<String>) {
     let _ = std::fs::write(path, out);
 }
 
+fn studio_parse_options(state: &AppState) -> literofi_theme::ParseOptions {
+    let mut search_dirs = vec![state.themes_dir.clone(), state.config_root.clone()];
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(dir) = exe.parent() {
+            search_dirs.push(dir.join("themes"));
+        }
+    }
+    literofi_theme::ParseOptions {
+        search_dirs,
+        dmenu_mode: false,
+    }
+}
+
+/// Returns `true` only for valid `.rasi` files that define (directly or via `@import`/`@theme`)
+/// at least one widget rule (`window`, `listview`, `element`, etc.). Palette-only helper files
+/// like `tokyo.rasi` and broken/unparseable `.rasi` files are excluded from Theme Studio.
+fn is_selectable_theme(path: &Path, opts: &literofi_theme::ParseOptions) -> bool {
+    let mut sheet = literofi_theme::ThemeSheet::new();
+    match sheet.parse_file(path, opts) {
+        Ok(()) => !sheet.root.children.is_empty(),
+        Err(_) => false,
+    }
+}
+
 fn list_themes(state: &AppState) -> Vec<ThemeEntry> {
     let favs = load_favorites(&state.favorites_file);
     let _ = std::fs::create_dir_all(&state.cache_dir);
+    let parse_opts = studio_parse_options(state);
     let mut out = Vec::new();
     if let Ok(rd) = std::fs::read_dir(&state.themes_dir) {
         for ent in rd.flatten() {
@@ -456,6 +481,9 @@ fn list_themes(state: &AppState) -> Vec<ThemeEntry> {
                 .and_then(|e| e.to_str())
                 .is_some_and(|e| e.eq_ignore_ascii_case("rasi"));
             if !is_rasi {
+                continue;
+            }
+            if !is_selectable_theme(&path, &parse_opts) {
                 continue;
             }
             let Some(stem) = path.file_stem().and_then(|s| s.to_str()) else {
@@ -481,6 +509,65 @@ fn list_themes(state: &AppState) -> Vec<ThemeEntry> {
             .cmp(&b.name.to_ascii_lowercase())
     });
     out
+}
+
+fn list_installed_fonts() -> Vec<String> {
+    use std::collections::BTreeSet;
+    let mut set = BTreeSet::new();
+    #[cfg(windows)]
+    {
+        for key in [
+            r"HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts",
+            r"HKCU\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Fonts",
+        ] {
+            let mut cmd = Command::new("reg.exe");
+            cmd.args(["query", key]).creation_flags(CREATE_NO_WINDOW);
+            if let Ok(out) = cmd.output() {
+                let text = String::from_utf8_lossy(&out.stdout);
+                for line in text.lines() {
+                    let trimmed = line.trim();
+                    let Some((raw_name, _)) = trimmed.split_once("REG_SZ") else {
+                        continue;
+                    };
+                    let mut name = raw_name.trim().to_string();
+                    for paren in ["(TrueType)", "(OpenType)", "(All res)"] {
+                        if let Some(stripped) = name.strip_suffix(paren) {
+                            name = stripped.trim().to_string();
+                        }
+                    }
+                    // Strip trailing style qualifiers to get clean family names
+                    for suffix in [
+                        " ExtraBold Italic",
+                        " ExtraLight Italic",
+                        " SemiBold Italic",
+                        " Bold Italic",
+                        " Medium Italic",
+                        " Light Italic",
+                        " Thin Italic",
+                        " Black Italic",
+                        " ExtraBold",
+                        " ExtraLight",
+                        " SemiBold",
+                        " Regular",
+                        " Bold",
+                        " Italic",
+                        " Medium",
+                        " Light",
+                        " Thin",
+                        " Black",
+                    ] {
+                        if let Some(stripped) = name.strip_suffix(suffix) {
+                            name = stripped.trim().to_string();
+                        }
+                    }
+                    if !name.is_empty() && !name.starts_with('@') && !name.contains('&') {
+                        set.insert(name);
+                    }
+                }
+            }
+        }
+    }
+    set.into_iter().collect()
 }
 
 fn parse_hex6(val: &str) -> Option<String> {
@@ -1031,19 +1118,60 @@ fn handle_client(mut stream: TcpStream, state: Arc<AppState>) {
             write_json(&mut stream, "200 OK", &state.prerender.to_json());
             return;
         }
+        if path == "/api/fonts" {
+            let fonts = list_installed_fonts();
+            let items: Vec<String> = fonts
+                .into_iter()
+                .map(|f| format!("\"{}\"", json_escape(&f)))
+                .collect();
+            write_json(
+                &mut stream,
+                "200 OK",
+                &format!(r#"{{"installed":[{}]}}"#, items.join(",")),
+            );
+            return;
+        }
+        if path == "/api/widgets-config" {
+            let cfg_path = state.config_root.join("widgets.toml");
+            let wcfg = literofi_core::widgets_config::WidgetsConfig::load_from(&cfg_path);
+            let raw_toml = std::fs::read_to_string(&cfg_path).unwrap_or_else(|_| wcfg.to_toml());
+            let mut json = wcfg.to_json(&cfg_path);
+            if json.ends_with('}') {
+                json.pop();
+                json.push_str(&format!(r#","toml":"{}"}}"#, json_escape(&raw_toml)));
+            }
+            write_json(&mut stream, "200 OK", &json);
+            return;
+        }
         if path == "/api/state" {
             let themes = list_themes(&state);
             let palettes = list_palettes(&state.colors_dir);
             let preview_count = themes.iter().filter(|t| t.has_preview).count();
             let active_theme = read_active_theme(&state.config_rasi);
             let active_palette = read_active_palette(&state.config_root);
+            let active_colors_json =
+                literofi_modes::active_palette::ActivePalette::load_from_user_config()
+                    .map(|p| {
+                        format!(
+                            r#"{{"bg":"{}","bgAlt":"{}","fg":"{}","accent":"{}","accentFg":"{}","urgent":"{}"}}"#,
+                            p.bg_hex(),
+                            p.bg_alt_hex(),
+                            p.fg_hex(),
+                            p.accent_hex(),
+                            p.accent_fg_hex(),
+                            p.urgent_hex(),
+                        )
+                    })
+                    .unwrap_or_else(|| "null".to_string());
 
-            let mut json = String::with_capacity(themes.len() * 90 + palettes.len() * 140 + 256);
-            json.push_str("{\"activeTheme\":\"");
+            let mut json = String::with_capacity(themes.len() * 90 + palettes.len() * 140 + 384);
+            json.push_str("{\"folderImport\":true,\"activeTheme\":\"");
             json.push_str(&json_escape(&active_theme));
             json.push_str("\",\"activePalette\":\"");
             json.push_str(&json_escape(&active_palette));
-            json.push_str("\",\"themes\":[");
+            json.push_str("\",\"activeThemeColors\":");
+            json.push_str(&active_colors_json);
+            json.push_str(",\"themes\":[");
             for (i, t) in themes.iter().enumerate() {
                 if i > 0 {
                     json.push(',');
@@ -1226,6 +1354,22 @@ fn handle_client(mut stream: TcpStream, state: Arc<AppState>) {
             write_json(&mut stream, "200 OK", r#"{"ok":true}"#);
             return;
         }
+        if path == "/api/import-folder" {
+            match choose_theme_folder(&state.themes_dir) {
+                Ok(Some(name)) => write_json(
+                    &mut stream,
+                    "200 OK",
+                    &format!(r#"{{"name":"{}"}}"#, json_escape(&name)),
+                ),
+                Ok(None) => write_json(&mut stream, "200 OK", r#"{"cancelled":true}"#),
+                Err(e) => write_json(
+                    &mut stream,
+                    "400 Bad Request",
+                    &format!(r#"{{"error":"{}"}}"#, json_escape(&e)),
+                ),
+            }
+            return;
+        }
         if path == "/api/import-theme" {
             let raw_name = extract_json_string_field(&body_str, "name").unwrap_or_default();
             let content = extract_json_string_field(&body_str, "content").unwrap_or_default();
@@ -1239,6 +1383,149 @@ fn handle_client(mut stream: TcpStream, state: Arc<AppState>) {
                     &mut stream,
                     "400 Bad Request",
                     &format!(r#"{{"error":"{}"}}"#, json_escape(&e)),
+                ),
+            }
+            return;
+        }
+        if path == "/api/widgets-config" {
+            let cfg_path = state.config_root.join("widgets.toml");
+            let reset = extract_json_bool_field(&body_str, "reset");
+            let wcfg = if reset {
+                literofi_core::widgets_config::WidgetsConfig::default()
+            } else {
+                let toml_text = extract_json_string_field(&body_str, "toml").unwrap_or_default();
+                literofi_core::widgets_config::WidgetsConfig::parse_toml(&toml_text)
+            };
+            match wcfg.save_to(&cfg_path) {
+                Ok(()) => {
+                    let mut json = wcfg.to_json(&cfg_path);
+                    let saved_toml = wcfg.to_toml();
+                    if json.ends_with('}') {
+                        json.pop();
+                        json.push_str(&format!(
+                            r#","ok":true,"toml":"{}"}}"#,
+                            json_escape(&saved_toml)
+                        ));
+                    }
+                    write_json(&mut stream, "200 OK", &json);
+                }
+                Err(e) => write_json(
+                    &mut stream,
+                    "500 Internal Server Error",
+                    &format!(r#"{{"error":"{}"}}"#, json_escape(&e)),
+                ),
+            }
+            return;
+        }
+        if path == "/api/reveal-theme" {
+            let name = extract_json_string_field(&body_str, "name").unwrap_or_default();
+            if name.is_empty() || name.contains('/') || name.contains('\\') || name.contains("..") {
+                write_json(
+                    &mut stream,
+                    "400 Bad Request",
+                    r#"{"error":"invalid theme name"}"#,
+                );
+                return;
+            }
+            let file_path = state.themes_dir.join(format!("{name}.rasi"));
+            if !file_path.is_file() {
+                write_json(
+                    &mut stream,
+                    "404 Not Found",
+                    r#"{"error":"theme file not found"}"#,
+                );
+                return;
+            }
+            #[cfg(windows)]
+            {
+                let mut cmd = Command::new("explorer.exe");
+                cmd.arg(format!("/select,{}", file_path.display()));
+                let _ = cmd.spawn();
+            }
+            write_json(
+                &mut stream,
+                "200 OK",
+                &format!(
+                    r#"{{"ok":true,"path":"{}"}}"#,
+                    json_escape(&file_path.to_string_lossy())
+                ),
+            );
+            return;
+        }
+        if path == "/api/open-themes-folder" {
+            let _ = std::fs::create_dir_all(&state.themes_dir);
+            #[cfg(windows)]
+            {
+                let mut cmd = Command::new("explorer.exe");
+                cmd.arg(&state.themes_dir);
+                let _ = cmd.spawn();
+            }
+            write_json(
+                &mut stream,
+                "200 OK",
+                &format!(
+                    r#"{{"ok":true,"path":"{}"}}"#,
+                    json_escape(&state.themes_dir.to_string_lossy())
+                ),
+            );
+            return;
+        }
+        if path == "/api/open-widgets-config" {
+            let cfg_path = state.config_root.join("widgets.toml");
+            if !cfg_path.is_file() {
+                let _ = literofi_core::widgets_config::WidgetsConfig::default().save_to(&cfg_path);
+            }
+            #[cfg(windows)]
+            {
+                let mut cmd = Command::new("cmd.exe");
+                cmd.args(["/C", "start", "", &cfg_path.to_string_lossy()])
+                    .creation_flags(CREATE_NO_WINDOW);
+                let _ = cmd.spawn();
+            }
+            write_json(
+                &mut stream,
+                "200 OK",
+                &format!(
+                    r#"{{"ok":true,"path":"{}"}}"#,
+                    json_escape(&cfg_path.to_string_lossy())
+                ),
+            );
+            return;
+        }
+        if path == "/api/preview-widget" {
+            let mode = extract_json_string_field(&body_str, "mode").unwrap_or_default();
+            let Some(exe) = find_literofi_exe() else {
+                write_json(
+                    &mut stream,
+                    "500 Internal Server Error",
+                    r#"{"error":"literofi.exe not found"}"#,
+                );
+                return;
+            };
+            state.close_live_preview();
+            let theme_arg: Option<&str> = match mode.as_str() {
+                "clipboard" => Some("clipboard"),
+                "control" => Some("control-center"),
+                "power" => Some("powermenu"),
+                _ => None,
+            };
+            let mut cmd = Command::new(exe);
+            cmd.arg("-show").arg(&mode);
+            if let Some(th) = theme_arg {
+                cmd.arg("-theme").arg(th);
+            }
+            #[cfg(windows)]
+            cmd.creation_flags(CREATE_NO_WINDOW);
+            match cmd.spawn() {
+                Ok(child) => {
+                    let mut guard = state.live_preview.lock().unwrap_or_else(|e| e.into_inner());
+                    *guard = Some(child);
+                    write_json(&mut stream, "200 OK", r#"{"ok":true}"#);
+                }
+                Err(e) => write_json(
+                    &mut stream,
+                    "500 Internal Server Error",
+                    &format!(r#"{{"error":"{}"}}"#, json_escape(&e.to_string())),
                 ),
             }
             return;
@@ -1271,6 +1558,163 @@ fn sanitize_theme_stem(raw_name: &str) -> Result<String, String> {
         return Err("Invalid theme name".to_string());
     }
     Ok(stem)
+}
+
+fn choose_theme_folder(themes: &Path) -> Result<Option<String>, String> {
+    // Paths are returned by the two native pickers, never supplied by an HTTP request.
+    let script = r#"
+$ErrorActionPreference = 'Stop'
+[Console]::OutputEncoding = New-Object Text.UTF8Encoding($false)
+Add-Type -AssemblyName System.Windows.Forms
+$folder = New-Object Windows.Forms.FolderBrowserDialog
+$folder.Description = 'Select the theme package folder'
+if ($folder.ShowDialog() -ne 'OK') { exit 0 }
+$file = New-Object Windows.Forms.OpenFileDialog
+$file.InitialDirectory = $folder.SelectedPath
+$file.Title = 'Select the main .rasi file inside the theme folder'
+$file.Filter = 'Rofi theme (*.rasi)|*.rasi'
+if ($file.ShowDialog() -ne 'OK') { exit 0 }
+[Console]::WriteLine($folder.SelectedPath)
+[Console]::WriteLine($file.FileName)
+"#;
+    let mut cmd = Command::new("powershell.exe");
+    #[cfg(windows)]
+    cmd.creation_flags(CREATE_NO_WINDOW);
+    let out = cmd
+        .args(["-NoProfile", "-STA", "-Command", script])
+        .output()
+        .map_err(|e| e.to_string())?;
+    if !out.status.success() {
+        return Err(String::from_utf8_lossy(&out.stderr).into_owned());
+    }
+    let paths = String::from_utf8(out.stdout).map_err(|e| e.to_string())?;
+    let mut lines = paths.lines();
+    let Some(root) = lines.next() else {
+        return Ok(None);
+    };
+    let entry = lines.next().ok_or("Missing theme entry")?;
+    install_theme_folder(themes, Path::new(root), Path::new(entry)).map(Some)
+}
+
+fn copy_theme_assets(src: &Path, dest: &Path) -> std::io::Result<()> {
+    for item in std::fs::read_dir(src)? {
+        let item = item?;
+        let kind = item.file_type()?;
+        #[cfg(windows)]
+        {
+            use std::os::windows::fs::MetadataExt;
+            if std::fs::symlink_metadata(item.path())?.file_attributes() & 0x400 != 0 {
+                continue;
+            }
+        }
+        let target = dest.join(item.file_name());
+        if kind.is_dir() && item.file_name() != ".git" {
+            std::fs::create_dir(&target)?;
+            copy_theme_assets(&item.path(), &target)?;
+        } else if kind.is_file() {
+            let path = item.path();
+            let ext = path
+                .extension()
+                .and_then(|s| s.to_str())
+                .unwrap_or("")
+                .to_ascii_lowercase();
+            if matches!(
+                ext.as_str(),
+                "rasi"
+                    | "rasinc"
+                    | "css"
+                    | "png"
+                    | "jpg"
+                    | "jpeg"
+                    | "gif"
+                    | "webp"
+                    | "bmp"
+                    | "svg"
+                    | "ico"
+                    | "ttf"
+                    | "otf"
+            ) {
+                std::fs::copy(path, target)?;
+            }
+        }
+    }
+    Ok(())
+}
+
+fn install_theme_folder(themes: &Path, root: &Path, entry: &Path) -> Result<String, String> {
+    let root = root.canonicalize().map_err(|e| e.to_string())?;
+    let entry = entry.canonicalize().map_err(|e| e.to_string())?;
+    let relative = entry
+        .strip_prefix(&root)
+        .map_err(|_| "Select a .rasi file inside the selected folder")?;
+    if !entry
+        .extension()
+        .is_some_and(|e| e.eq_ignore_ascii_case("rasi"))
+    {
+        return Err("Select a .rasi file".into());
+    }
+    let stem = sanitize_theme_stem(
+        entry
+            .file_name()
+            .and_then(|s| s.to_str())
+            .ok_or("Invalid theme name")?,
+    )?;
+    std::fs::create_dir_all(themes).map_err(|e| e.to_string())?;
+    if themes
+        .canonicalize()
+        .map_err(|e| e.to_string())?
+        .starts_with(&root)
+    {
+        return Err("Select the downloaded theme folder outside the installation directory".into());
+    }
+    let packages = themes.join("packages");
+    std::fs::create_dir_all(&packages).map_err(|e| e.to_string())?;
+    for n in 1.. {
+        let name = if n == 1 {
+            stem.clone()
+        } else {
+            format!("{stem}-{n}")
+        };
+        let wrapper = themes.join(format!("{name}.rasi"));
+        if wrapper.exists() {
+            continue;
+        }
+        let dest = packages.join(&name);
+        match std::fs::create_dir(&dest) {
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => continue,
+            Err(e) => return Err(e.to_string()),
+            Ok(()) => {}
+        }
+        let result = (|| {
+            copy_theme_assets(&root, &dest).map_err(|e| e.to_string())?;
+            literofi_theme::ThemeSheet::new()
+                .parse_file(
+                    &dest.join(relative),
+                    &literofi_theme::ParseOptions {
+                        search_dirs: vec![themes.to_owned()],
+                        ..Default::default()
+                    },
+                )
+                .map_err(|e| e.to_string())?;
+            let rel = relative.to_string_lossy().replace('\\', "/");
+            let mut file = std::fs::OpenOptions::new()
+                .write(true)
+                .create_new(true)
+                .open(&wrapper)
+                .map_err(|e| e.to_string())?;
+            if let Err(e) = writeln!(file, "@import \"packages/{name}/{rel}\"") {
+                drop(file);
+                let _ = std::fs::remove_file(wrapper);
+                return Err(e.to_string());
+            }
+            Ok(name)
+        })();
+        if result.is_err() {
+            let _ = std::fs::remove_dir_all(dest);
+        }
+        return result;
+    }
+    unreachable!()
 }
 
 fn import_theme_file(
@@ -1435,6 +1879,45 @@ mod tests {
     use super::*;
 
     #[test]
+    fn folder_import_preserves_nested_files_and_rolls_back_broken_imports() {
+        let base = std::env::temp_dir().join(format!("literofi_pkg_{}", std::process::id()));
+        let src = base.join("source");
+        let themes = base.join("themes");
+        let shared = src.join("shared");
+        std::fs::create_dir_all(&shared).unwrap();
+        std::fs::write(shared.join("photo.jpg"), b"asset").unwrap();
+        std::fs::write(
+            shared.join("layout.rasi"),
+            r#"window { background-image: url("photo.jpg", width); }"#,
+        )
+        .unwrap();
+        let entry = src.join("launcher.rasi");
+        std::fs::write(&entry, r#"@import "shared/layout.rasi""#).unwrap();
+        assert_eq!(
+            install_theme_folder(&themes, &src, &entry).unwrap(),
+            "launcher"
+        );
+        assert_eq!(
+            install_theme_folder(&themes, &src, &entry).unwrap(),
+            "launcher-2"
+        );
+        std::fs::write(&entry, r#"@import "absent.rasi""#).unwrap();
+        assert!(install_theme_folder(&themes, &src, &entry)
+            .unwrap_err()
+            .contains("absent.rasi"));
+        assert!(!themes.join("packages/launcher-3").exists());
+        std::fs::remove_dir_all(src).unwrap();
+        literofi_theme::ThemeSheet::new()
+            .parse_file(&themes.join("launcher.rasi"), &Default::default())
+            .unwrap();
+        assert_eq!(
+            std::fs::read(themes.join("packages/launcher/shared/photo.jpg")).unwrap(),
+            b"asset"
+        );
+        std::fs::remove_dir_all(base).unwrap();
+    }
+
+    #[test]
     fn import_theme_sanitizes_name_strips_bom_and_invalidates_cache() {
         let base =
             std::env::temp_dir().join(format!("literofi_studio_import_{}", std::process::id()));
@@ -1458,6 +1941,51 @@ mod tests {
 
         assert!(import_theme_file(&themes, &cache, "empty.rasi", "   ").is_err());
         assert!(sanitize_theme_stem("...").is_err());
+
+        let _ = std::fs::remove_dir_all(&base);
+    }
+
+    #[test]
+    fn list_themes_hides_palette_only_and_broken_rasi_files() {
+        let base =
+            std::env::temp_dir().join(format!("literofi_studio_filter_{}", std::process::id()));
+        let themes = base.join("themes");
+        let cache = base.join("cache");
+        std::fs::create_dir_all(&themes).unwrap();
+        std::fs::create_dir_all(&cache).unwrap();
+
+        std::fs::write(
+            themes.join("tokyo.rasi"),
+            "* { bg0: #1a1b26; fg0: #c0caf5; }\n",
+        )
+        .unwrap();
+        std::fs::write(
+            themes.join("config.rasi"),
+            "@theme \"tokyo\"\nwindow { background-color: @bg0; width: 480; }\n",
+        )
+        .unwrap();
+        std::fs::write(
+            themes.join("broken.rasi"),
+            "@import \"does-not-exist.rasi\"\n",
+        )
+        .unwrap();
+
+        let state = AppState {
+            config_root: base.clone(),
+            themes_dir: themes.clone(),
+            colors_dir: base.join("colors"),
+            config_rasi: base.join("config.rasi"),
+            favorites_file: base.join("favorites.json"),
+            cache_dir: cache,
+            render_locks: Mutex::new(HashMap::new()),
+            live_preview: Mutex::new(None),
+            prerender: Arc::new(PrerenderState::new()),
+            last_ping_ms: AtomicU64::new(0),
+            start_instant: Instant::now(),
+        };
+
+        let listed: Vec<String> = list_themes(&state).into_iter().map(|t| t.name).collect();
+        assert_eq!(listed, vec!["config"]);
 
         let _ = std::fs::remove_dir_all(&base);
     }

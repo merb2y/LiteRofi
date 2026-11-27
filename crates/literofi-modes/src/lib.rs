@@ -1,19 +1,33 @@
 //! Mode implementations (`dmenu`, `run`, `drun`, `window`, `windowcd`, `combi`, `script`)
 //! mirroring upstream `source/modes/*.c` with Windows-native app & window discovery.
 
+pub mod active_palette;
+pub mod calc;
+pub mod clipboard;
 pub mod color_picker;
 pub mod combi;
+pub mod control;
 pub mod dmenu;
 pub mod drun;
+pub mod emoji;
 pub mod filebrowser;
+pub mod games;
 pub mod keys;
+pub mod menu;
 pub mod music;
+pub mod power;
 pub mod recursivebrowser;
 pub mod registry;
 pub mod run;
 pub mod script;
+pub mod search;
+pub mod shortcuts;
+pub mod snippets;
 pub mod ssh;
 pub mod theme_picker;
+pub mod translate;
+pub mod wallpaper;
+pub mod wallpaper_effects;
 pub mod win32_apps;
 pub mod win32_windows;
 pub mod window;
@@ -60,6 +74,10 @@ pub trait RichMode {
     fn theme_snippets(&self) -> Vec<String> {
         Vec::new()
     }
+    fn markup_rows_override(&self) -> Option<bool> {
+        None
+    }
+
     fn no_custom_override(&self) -> Option<bool> {
         None
     }
@@ -68,6 +86,12 @@ pub trait RichMode {
     }
     fn reload_hints(&self) -> ReloadHints {
         ReloadHints::default()
+    }
+    fn live_message_evaluator(&self) -> Option<fn(&str) -> Option<String>> {
+        None
+    }
+    fn back_on_empty_backspace(&self) -> bool {
+        false
     }
     fn handle_outcome(&mut self, outcome: &UiOutcome, query: &str) -> Result<ModeStep, String>;
 }

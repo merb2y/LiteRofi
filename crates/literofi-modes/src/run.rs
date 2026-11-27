@@ -290,6 +290,7 @@ impl RichMode for RunMode {
             }
             UiOutcome::Cancelled => Ok(ModeStep::Exit(1)),
             UiOutcome::ModeSwitch(idx) => Ok(ModeStep::SwitchModeIndex(*idx)),
+            UiOutcome::Back => Ok(ModeStep::Reload),
         }
     }
 }

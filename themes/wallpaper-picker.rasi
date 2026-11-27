@@ -1,0 +1,120 @@
+/**
+ * LiteRofi Wallpaper Switcher Theme (16:9 Rounded Card Gallery)
+ * Dynamically synced to the user's active LiteRofi palette at runtime.
+ */
+
+configuration {
+    show-icons: true;
+    hover-select: true;
+    me-select-entry: "";
+    me-accept-entry: "MousePrimary";
+}
+
+* {
+    bg:          #1e1e2e;
+    bg-alt:      #2a2b3d;
+    fg:          #cdd6f4;
+    accent:      #89b4fa;
+    accent-fg:   #1e1e2e;
+    font:        "Segoe UI 10";
+}
+
+window {
+    width:            1080px;
+    location:         center;
+    anchor:           center;
+    transparency:     "real";
+    border:           2px solid;
+    border-radius:    16px;
+    border-color:     @accent;
+    background-color: @bg;
+    padding:          18px;
+}
+
+mainbox {
+    orientation:      vertical;
+    spacing:          12px;
+    background-color: transparent;
+    children:         [ inputbar, message, listview ];
+}
+
+inputbar {
+    orientation:      horizontal;
+    spacing:          10px;
+    padding:          10px 14px;
+    border-radius:    12px;
+    background-color: @bg-alt;
+    children:         [ prompt, entry ];
+}
+
+prompt {
+    background-color: @accent;
+    text-color:       @accent-fg;
+    font:             "Segoe UI Semibold 10";
+    padding:          6px 12px;
+    border-radius:    8px;
+}
+
+entry {
+    background-color: transparent;
+    text-color:       @fg;
+    placeholder:      "Search wallpapers...";
+    placeholder-color: #7f849c;
+    vertical-align:   0.5;
+}
+
+message {
+    background-color: transparent;
+    padding:          0px 4px;
+}
+
+textbox {
+    background-color: transparent;
+    text-color:       @fg;
+    font:             "Segoe UI 9";
+}
+
+listview {
+    columns:          3;
+    lines:            3;
+    spacing:          14px;
+    fixed-height:     true;
+    fixed-columns:    true;
+    scrollbar:        false;
+    background-color: transparent;
+}
+
+element {
+    orientation:      vertical;
+    spacing:          8px;
+    padding:          8px;
+    border:           2px solid;
+    border-color:     transparent;
+    border-radius:    12px;
+    background-color: @bg-alt;
+    text-color:       @fg;
+    cursor:           pointer;
+}
+
+element selected.normal {
+    background-color: @accent;
+    border-color:     @accent;
+    text-color:       @accent-fg;
+}
+
+element-icon {
+    width:            312px;
+    height:           176px;
+    border-radius:    8px;
+    horizontal-align: 0.5;
+    vertical-align:   0.5;
+    background-color: transparent;
+}
+
+element-text {
+    horizontal-align: 0.5;
+    vertical-align:   0.5;
+    font:             "Segoe UI Semibold 10";
+    text-color:       inherit;
+    background-color: transparent;
+}

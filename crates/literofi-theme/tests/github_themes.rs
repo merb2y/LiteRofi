@@ -420,3 +420,25 @@ window {
         760.0
     );
 }
+
+#[test]
+fn profile_can_select_a_theme_named_config_and_its_sibling_palette() {
+    let tmp = TempDirGuard::new("profile_collision");
+    let themes = tmp.0.join("themes");
+    fs::create_dir(&themes).unwrap();
+    fs::write(tmp.0.join("config.rasi"), r#"@theme "config""#).unwrap();
+    fs::write(
+        themes.join("config.rasi"),
+        r#"@theme "tokyo"
+window { width: 480px; }"#,
+    )
+    .unwrap();
+    fs::write(themes.join("tokyo.rasi"), "* { accent: #f7768e; }").unwrap();
+    let mut sheet = ThemeSheet::new();
+    sheet
+        .parse_file(&tmp.0.join("config.rasi"), &Default::default())
+        .unwrap();
+    let dump = sheet.dump_theme();
+    assert!(dump.contains("480px"));
+    assert!(dump.contains("247, 118, 142"));
+}

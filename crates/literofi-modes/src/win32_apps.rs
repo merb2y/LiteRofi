@@ -9,6 +9,15 @@ pub enum AppLaunchTarget {
     ShellPath(PathBuf),
     AppsFolderAumid(String),
     Command(String),
+    /// Direct executable launch resolved from a `.lnk` shortcut so `CreateProcessW`
+    /// spawns in ~1-3ms without `ShellExecuteW` shortcut/COM/zone overhead.
+    /// Falls back to `fallback_shortcut` (or `exe`) via `ShellExecuteExW` on elevation/error.
+    DirectExe {
+        exe: PathBuf,
+        args: String,
+        working_dir: Option<PathBuf>,
+        fallback_shortcut: Option<PathBuf>,
+    },
 }
 
 /// Discovered desktop application metadata mapped to Rofi's `drun` model.
@@ -26,18 +35,29 @@ pub struct DiscoveredApp {
     pub launch: AppLaunchTarget,
 }
 
+#[cfg(windows)]
+static BG_REFRESH_RUNNING: std::sync::atomic::AtomicBool =
+    std::sync::atomic::AtomicBool::new(false);
+
 /// Discovers installed Windows applications from `FOLDERID_AppsFolder` and Start Menu folders.
-/// Uses a fast validated on-disk cache (`%LOCALAPPDATA%\LiteRofi\cache\drun_apps_v1.tsv`) so
-/// repeated launcher invocations start in milliseconds.
+/// Uses stale-while-revalidate on `%LOCALAPPDATA%\LiteRofi\cache\drun_apps_v2.tsv` so
+/// hotkey wakeup ALWAYS returns in <1ms even after hours of idle time, refreshing stale
+/// caches asynchronously on a background thread.
 pub fn discover_windows_apps() -> Vec<DiscoveredApp> {
     #[cfg(windows)]
     {
         let path = drun_cache_path();
-        if is_cache_fresh(&path) {
-            if let Some(cached) = load_cache(&path) {
-                if !cached.is_empty() {
-                    return cached;
+        if let Some(cached) = load_cache(&path) {
+            if !cached.is_empty() {
+                if !is_cache_fresh(&path)
+                    && !BG_REFRESH_RUNNING.swap(true, std::sync::atomic::Ordering::AcqRel)
+                {
+                    std::thread::spawn(|| {
+                        let _ = refresh_windows_apps_cache();
+                        BG_REFRESH_RUNNING.store(false, std::sync::atomic::Ordering::Release);
+                    });
                 }
+                return cached;
             }
         }
         let fresh = discover_windows_apps_impl();
@@ -65,9 +85,9 @@ pub fn refresh_windows_apps_cache() -> usize {
     }
 }
 
-const CACHE_HEADER: &str = "LITEROFI_DRUN_V2";
+const CACHE_HEADER: &str = "LITEROFI_DRUN_V3";
 #[cfg(windows)]
-const CACHE_TTL_SECS: u64 = 600;
+const CACHE_TTL_SECS: u64 = 3600;
 
 #[cfg(windows)]
 fn drun_cache_path() -> PathBuf {
@@ -76,10 +96,10 @@ fn drun_cache_path() -> PathBuf {
             return PathBuf::from(local)
                 .join("LiteRofi")
                 .join("cache")
-                .join("drun_apps_v2.tsv");
+                .join("drun_apps_v3.tsv");
         }
     }
-    std::env::temp_dir().join("literofi_drun_cache_v2.tsv")
+    std::env::temp_dir().join("literofi_drun_cache_v3.tsv")
 }
 
 #[cfg(windows)]
@@ -169,10 +189,34 @@ pub(crate) fn encode_cache(apps: &[DiscoveredApp]) -> String {
     let mut out = String::from(CACHE_HEADER);
     out.push('\n');
     for app in apps {
+        let owned_target: String;
         let (kind, target) = match &app.launch {
             AppLaunchTarget::AppsFolderAumid(a) => ("A", a.as_str()),
             AppLaunchTarget::ShellPath(p) => ("P", p.to_str().unwrap_or_default()),
             AppLaunchTarget::Command(c) => ("C", c.as_str()),
+            AppLaunchTarget::DirectExe {
+                exe,
+                args,
+                working_dir,
+                fallback_shortcut,
+            } => {
+                let wd = working_dir
+                    .as_deref()
+                    .and_then(|p| p.to_str())
+                    .unwrap_or("");
+                let fb = fallback_shortcut
+                    .as_deref()
+                    .and_then(|p| p.to_str())
+                    .unwrap_or("");
+                owned_target = [
+                    exe.to_str().unwrap_or_default().replace('\x1f', " "),
+                    args.replace('\x1f', " "),
+                    wd.replace('\x1f', " "),
+                    fb.replace('\x1f', " "),
+                ]
+                .join("\x1f");
+                ("D", owned_target.as_str())
+            }
         };
         let cats = app
             .categories
@@ -224,6 +268,19 @@ pub(crate) fn decode_cache(raw: &str) -> Option<Vec<DiscoveredApp>> {
             "A" => AppLaunchTarget::AppsFolderAumid(target),
             "P" => AppLaunchTarget::ShellPath(PathBuf::from(target)),
             "C" => AppLaunchTarget::Command(target),
+            "D" => {
+                let mut parts = target.splitn(4, '\x1f');
+                let exe = parts.next()?.to_string();
+                let args = parts.next().unwrap_or("").to_string();
+                let wd = parts.next().unwrap_or("");
+                let fb = parts.next().unwrap_or("");
+                AppLaunchTarget::DirectExe {
+                    exe: PathBuf::from(exe),
+                    args,
+                    working_dir: (!wd.is_empty()).then(|| PathBuf::from(wd)),
+                    fallback_shortcut: (!fb.is_empty()).then(|| PathBuf::from(fb)),
+                }
+            }
             _ => return None,
         };
         let categories = if cats_s.is_empty() {
@@ -247,7 +304,11 @@ pub(crate) fn decode_cache(raw: &str) -> Option<Vec<DiscoveredApp>> {
     Some(apps)
 }
 
-/// Launches a discovered application using Win32 `ShellExecuteW` or child command spawn.
+/// Launches a discovered application using the fastest native path:
+/// - `DirectExe`: direct `CreateProcessW` (~1-3ms), falling back to `ShellExecuteExW` on UAC/error.
+/// - `AppsFolderAumid`: `IApplicationActivationManager::ActivateApplication` (~15-40ms),
+///   avoiding slow `explorer.exe` process spawn, with `explorer.exe` fallback.
+/// - `ShellPath`: direct `CreateProcessW` if `.exe`, otherwise `ShellExecuteExW` (`SEE_MASK_ASYNCOK`).
 pub fn launch_windows_app(target: &AppLaunchTarget) -> Result<(), String> {
     match target {
         AppLaunchTarget::Command(cmd) => {
@@ -255,11 +316,31 @@ pub fn launch_windows_app(target: &AppLaunchTarget) -> Result<(), String> {
             crate::spawn_command_argv(&argv, None, None)
         }
         #[cfg(windows)]
-        AppLaunchTarget::ShellPath(path) => shell_open(&path.to_string_lossy(), None),
+        AppLaunchTarget::DirectExe {
+            exe,
+            args,
+            working_dir,
+            fallback_shortcut,
+        } => win::launch_direct_exe(
+            exe,
+            args,
+            working_dir.as_deref(),
+            fallback_shortcut.as_deref(),
+        ),
         #[cfg(windows)]
-        AppLaunchTarget::AppsFolderAumid(aumid) => {
-            shell_open("explorer.exe", Some(&format!("shell:AppsFolder\\{aumid}")))
+        AppLaunchTarget::ShellPath(path) => {
+            let is_exe = path
+                .extension()
+                .and_then(|e| e.to_str())
+                .is_some_and(|e| e.eq_ignore_ascii_case("exe"));
+            if is_exe && path.is_file() {
+                win::launch_direct_exe(path, "", path.parent(), Some(path))
+            } else {
+                shell_open(&path.to_string_lossy(), None)
+            }
         }
+        #[cfg(windows)]
+        AppLaunchTarget::AppsFolderAumid(aumid) => win::activate_aumid(aumid),
         #[cfg(not(windows))]
         _ => Err("Windows Shell launch requires Windows".to_string()),
     }
@@ -415,19 +496,25 @@ fn collect_files_with_ext(dir: &Path, exts: &[&str], out: &mut Vec<PathBuf>) {
 mod win {
     use super::{collect_files_with_ext, AppLaunchTarget, DiscoveredApp};
     use std::collections::HashMap;
+    use std::os::windows::process::CommandExt;
     use std::path::{Path, PathBuf};
+    use std::process::{Command, Stdio};
     use windows::core::{w, Interface, HSTRING, PCWSTR};
     use windows::Win32::Foundation::{RPC_E_CHANGED_MODE, S_FALSE, S_OK};
     use windows::Win32::System::Com::{
         CoCreateInstance, CoInitializeEx, CoTaskMemFree, CoUninitialize, IPersistFile,
-        CLSCTX_INPROC_SERVER, COINIT_APARTMENTTHREADED, STGM_READ,
+        CLSCTX_INPROC_SERVER, CLSCTX_LOCAL_SERVER, COINIT_APARTMENTTHREADED, STGM_READ,
     };
     use windows::Win32::UI::Shell::{
-        BHID_EnumItems, FOLDERID_AppsFolder, IEnumShellItems, IShellItem, IShellLinkW,
-        SHGetKnownFolderItem, ShellExecuteW, ShellLink, KF_FLAG_DEFAULT,
-        SIGDN_DESKTOPABSOLUTEPARSING, SIGDN_NORMALDISPLAY,
+        ApplicationActivationManager, BHID_EnumItems, FOLDERID_AppsFolder,
+        IApplicationActivationManager, IEnumShellItems, IShellItem, IShellLinkDataList,
+        IShellLinkW, SHGetKnownFolderItem, ShellExecuteExW, ShellLink, AO_NONE, KF_FLAG_DEFAULT,
+        SEE_MASK_ASYNCOK, SHELLEXECUTEINFOW, SIGDN_DESKTOPABSOLUTEPARSING, SIGDN_NORMALDISPLAY,
+        SLDF_RUNAS_USER,
     };
-    use windows::Win32::UI::WindowsAndMessaging::SW_SHOWNORMAL;
+    use windows::Win32::UI::WindowsAndMessaging::{
+        AllowSetForegroundWindow, ASFW_ANY, SW_SHOWNORMAL,
+    };
 
     struct ComGuard {
         should_uninit: bool,
@@ -456,30 +543,129 @@ mod win {
         }
     }
 
+    /// Expands `%VAR%` Windows environment variables in a path string without spawning a shell.
+    fn expand_env_vars(raw: &str) -> String {
+        let mut out = String::with_capacity(raw.len());
+        let mut rest = raw;
+        while let Some(start) = rest.find('%') {
+            out.push_str(&rest[..start]);
+            let after = &rest[start + 1..];
+            if let Some(end) = after.find('%') {
+                let var_name = &after[..end];
+                if !var_name.is_empty() {
+                    if let Ok(val) = std::env::var(var_name) {
+                        out.push_str(&val);
+                    } else {
+                        out.push('%');
+                        out.push_str(var_name);
+                        out.push('%');
+                    }
+                } else {
+                    out.push_str("%%");
+                }
+                rest = &after[end + 1..];
+            } else {
+                out.push_str(&rest[start..]);
+                return out;
+            }
+        }
+        out.push_str(rest);
+        out
+    }
+
+    /// Launches a resolved `.exe` directly via `CreateProcessW` (~1-3ms), avoiding
+    /// `ShellExecuteW` shortcut parsing, Shell extension hooks, and zone checks.
+    /// Falls back to `ShellExecuteExW` if `CreateProcessW` fails (e.g. UAC `ERROR_ELEVATION_REQUIRED`).
+    pub fn launch_direct_exe(
+        exe: &Path,
+        args: &str,
+        working_dir: Option<&Path>,
+        fallback_shortcut: Option<&Path>,
+    ) -> Result<(), String> {
+        // SAFETY: Grants foreground activation permission to the newly spawned process.
+        unsafe {
+            let _ = AllowSetForegroundWindow(ASFW_ANY);
+        }
+        let mut cmd = Command::new(exe);
+        let trimmed_args = args.trim();
+        if !trimmed_args.is_empty() {
+            cmd.raw_arg(trimmed_args);
+        }
+        if let Some(dir) = working_dir.filter(|d| d.is_dir()) {
+            cmd.current_dir(dir);
+        } else if let Some(parent) = exe.parent().filter(|d| d.is_dir()) {
+            cmd.current_dir(parent);
+        }
+        cmd.stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null());
+        match cmd.spawn() {
+            Ok(_) => Ok(()),
+            Err(_) => {
+                if let Some(shortcut) = fallback_shortcut {
+                    shell_open(&shortcut.to_string_lossy(), None)
+                } else {
+                    shell_open(
+                        &exe.to_string_lossy(),
+                        (!trimmed_args.is_empty()).then_some(trimmed_args),
+                    )
+                }
+            }
+        }
+    }
+
+    /// Activates an AppsFolder AUMID directly via `IApplicationActivationManager::ActivateApplication`
+    /// (~15-40ms), avoiding spawning an intermediate `explorer.exe` process.
+    /// Falls back to `explorer.exe shell:AppsFolder\<aumid>` if COM activation fails.
+    pub fn activate_aumid(aumid: &str) -> Result<(), String> {
+        let _com = ComGuard::init();
+        // SAFETY: Grants foreground activation permission and invokes Shell's ApplicationActivationManager.
+        unsafe {
+            let _ = AllowSetForegroundWindow(ASFW_ANY);
+            if let Ok(mgr) = CoCreateInstance::<_, IApplicationActivationManager>(
+                &ApplicationActivationManager,
+                None,
+                CLSCTX_LOCAL_SERVER,
+            ) {
+                let w_aumid = HSTRING::from(aumid);
+                if mgr
+                    .ActivateApplication(&w_aumid, PCWSTR::null(), AO_NONE)
+                    .is_ok()
+                {
+                    return Ok(());
+                }
+            }
+        }
+        shell_open("explorer.exe", Some(&format!("shell:AppsFolder\\{aumid}")))
+    }
+
     pub fn shell_open(file: &str, params: Option<&str>) -> Result<(), String> {
+        let _com = ComGuard::init();
         let wfile = HSTRING::from(file);
         let wparams = params.map(HSTRING::from);
         let params_ptr = wparams
             .as_ref()
             .map_or(PCWSTR::null(), |s| PCWSTR(s.as_ptr()));
-        // SAFETY: Valid HSTRING/PCWSTR pointers passed to ShellExecuteW.
-        let hinst = unsafe {
-            ShellExecuteW(
-                None,
-                w!("open"),
-                &wfile,
-                params_ptr,
-                PCWSTR::null(),
-                SW_SHOWNORMAL,
-            )
+        let mut sei = SHELLEXECUTEINFOW {
+            cbSize: std::mem::size_of::<SHELLEXECUTEINFOW>() as u32,
+            fMask: SEE_MASK_ASYNCOK,
+            lpVerb: w!("open"),
+            lpFile: PCWSTR(wfile.as_ptr()),
+            lpParameters: params_ptr,
+            nShow: SW_SHOWNORMAL.0,
+            ..Default::default()
         };
-        if (hinst.0 as isize) > 32 {
-            Ok(())
-        } else {
-            Err(format!(
-                "ShellExecuteW failed for `{file}` (code {})",
-                hinst.0 as isize
-            ))
+        // SAFETY: Valid pointers in SHELLEXECUTEINFOW for the duration of ShellExecuteExW.
+        unsafe {
+            let _ = AllowSetForegroundWindow(ASFW_ANY);
+            if ShellExecuteExW(&mut sei).is_ok() {
+                Ok(())
+            } else {
+                Err(format!(
+                    "ShellExecuteExW failed for `{file}` (hinst {})",
+                    sei.hInstApp.0 as isize
+                ))
+            }
         }
     }
 
@@ -512,7 +698,11 @@ mod win {
                             // so shortcuts carrying CLI arguments (e.g. `LiteRofi Music.lnk` ->
                             // `-show music -theme music-player`) always launch with their full args.
                             if matches!(existing.launch, AppLaunchTarget::AppsFolderAumid(_))
-                                && matches!(app.launch, AppLaunchTarget::ShellPath(_))
+                                && matches!(
+                                    app.launch,
+                                    AppLaunchTarget::ShellPath(_)
+                                        | AppLaunchTarget::DirectExe { .. }
+                                )
                             {
                                 existing.launch = app.launch.clone();
                             }
@@ -525,10 +715,18 @@ mod win {
                             if existing.categories.is_empty() {
                                 existing.categories = app.categories.clone();
                             }
+                            let incoming_is_concrete_icon = app.icon.as_deref().is_some_and(|ic| {
+                                let low = ic.to_ascii_lowercase();
+                                low.ends_with(".ico") || low.ends_with(".png")
+                            });
                             if existing.icon.is_none()
-                                || existing.icon.as_deref().is_some_and(|ic| {
-                                    ic.contains("steam://") || ic.contains("com.epicgames")
-                                }) && app.icon.is_some()
+                                || (app.icon.is_some()
+                                    && existing.icon.as_deref().is_some_and(|ic| {
+                                        ic.contains("steam://")
+                                            || ic.contains("com.epicgames")
+                                            || (incoming_is_concrete_icon
+                                                && ic.starts_with("shell:AppsFolder\\"))
+                                    }))
                             {
                                 existing.icon = app.icon.clone();
                             }
@@ -733,9 +931,11 @@ mod win {
         }
 
         let mut target_exec = path.to_string_lossy().into_owned();
+        let mut target_args = String::new();
         let mut comment: Option<String> = None;
         let mut workdir: Option<PathBuf> = None;
         let mut icon_override: Option<String> = None;
+        let mut run_as_admin = false;
 
         // SAFETY: Reads `.lnk` properties via the reused ShellLink + IPersistFile with SLGP_RAWPATH.
         unsafe {
@@ -749,6 +949,10 @@ mod win {
                             target_exec = s;
                         }
                     }
+                    let mut abuf = [0u16; 2048];
+                    if link.GetArguments(&mut abuf).is_ok() {
+                        target_args = utf16_z(&abuf);
+                    }
                     let mut dbuf = [0u16; 1024];
                     if link.GetDescription(&mut dbuf).is_ok() {
                         let d = utf16_z(&dbuf);
@@ -760,7 +964,14 @@ mod win {
                     if link.GetWorkingDirectory(&mut wbuf).is_ok() {
                         let w = utf16_z(&wbuf);
                         if !w.is_empty() {
-                            workdir = Some(PathBuf::from(w));
+                            workdir = Some(PathBuf::from(expand_env_vars(&w)));
+                        }
+                    }
+                    if let Ok(data_list) = link.cast::<IShellLinkDataList>() {
+                        if let Ok(flags) = data_list.GetFlags() {
+                            if (flags & (SLDF_RUNAS_USER.0 as u32)) != 0 {
+                                run_as_admin = true;
+                            }
                         }
                     }
                     let mut ibuf = [0u16; 1024];
@@ -794,12 +1005,14 @@ mod win {
             }
         }
 
-        let t_clean = target_exec.trim().trim_matches('"');
+        let expanded_target = expand_env_vars(&target_exec);
+        let t_clean = expanded_target.trim().trim_matches('"');
         let t_lower = t_clean.to_ascii_lowercase();
-        if t_clean.len() > 3
+        let is_concrete_exe = t_clean.len() > 3
             && t_clean.as_bytes()[1] == b':'
             && (t_clean.as_bytes()[2] == b'\\' || t_clean.as_bytes()[2] == b'/')
-            && t_lower.ends_with(".exe")
+            && t_lower.ends_with(".exe");
+        if is_concrete_exe
             && !t_lower.contains("\\windows\\installer\\")
             && !Path::new(t_clean).is_file()
         {
@@ -809,6 +1022,17 @@ mod win {
         if is_non_app_target_or_name(&stem, &target_exec) {
             return None;
         }
+
+        let launch = if is_concrete_exe && !run_as_admin && Path::new(t_clean).is_file() {
+            AppLaunchTarget::DirectExe {
+                exe: PathBuf::from(t_clean),
+                args: target_args,
+                working_dir: workdir.clone(),
+                fallback_shortcut: Some(path.to_path_buf()),
+            }
+        } else {
+            AppLaunchTarget::ShellPath(path.to_path_buf())
+        };
 
         Some(DiscoveredApp {
             id: path.to_string_lossy().into_owned(),
@@ -820,7 +1044,7 @@ mod win {
             categories,
             keywords: Vec::new(),
             icon: icon_override.or_else(|| Some(path.to_string_lossy().into_owned())),
-            launch: AppLaunchTarget::ShellPath(path.to_path_buf()),
+            launch,
         })
     }
 

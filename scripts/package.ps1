@@ -1,7 +1,10 @@
 [CmdletBinding()]
 param(
-    [string]$Version = "0.1.0",
+    [ValidatePattern('^[A-Za-z0-9][A-Za-z0-9._-]*$')]
+    [string]$Version = "0.2.0",
     [string]$AssetSourceDir = (Join-Path $env:APPDATA "LiteRofi"),
+    [string]$OutputDirectory = "",
+    [switch]$PortableOnly,
     [switch]$SkipBuild
 )
 
@@ -27,24 +30,22 @@ try {
         throw "Studio binary missing at $StudioExe"
     }
 
-    $DistDir = Join-Path $RepoRoot "dist"
+    $DistDir = if ($OutputDirectory) { [IO.Path]::GetFullPath($OutputDirectory) } else { Join-Path $RepoRoot "dist" }
     $PortableName = "LiteRofi-$Version-win64-portable"
     $PortableDir = Join-Path $DistDir $PortableName
     $PortableZip = Join-Path $DistDir "$PortableName.zip"
     $SetupExe = Join-Path $DistDir "LiteRofi-$Version-win64-Setup.exe"
-    $InnoStage = Join-Path $DistDir "_inno_stage"
+    $InnoStage = Join-Path $DistDir ("_inno_stage_" + [Guid]::NewGuid().ToString("N"))
     $AssetsStage = Join-Path $InnoStage "assets"
 
     New-Item -ItemType Directory -Path $DistDir -Force | Out-Null
-    foreach ($p in @($PortableDir, $InnoStage)) {
-        if (Test-Path -LiteralPath $p) {
-            Remove-Item -LiteralPath $p -Recurse -Force
+    if (Test-Path -LiteralPath $PortableDir) {
+        $existing = Get-Item -LiteralPath $PortableDir
+        if ($existing.Parent.FullName -ne (Get-Item -LiteralPath $DistDir).FullName -or
+            ($existing.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            throw "Unexpected package destination: $PortableDir"
         }
-    }
-    foreach ($f in @($PortableZip, $SetupExe)) {
-        if (Test-Path -LiteralPath $f) {
-            Remove-Item -LiteralPath $f -Force
-        }
+        Remove-Item -LiteralPath $existing.FullName -Recurse -Force
     }
 
     # Assemble complete asset bundle (themes, colors, images, launchers, wallust)
@@ -64,8 +65,10 @@ try {
     # Merge repo bundled themes & official MIT Rofi themes if missing
     foreach ($dir in @((Join-Path $RepoRoot "themes"), (Join-Path $RepoRoot "reference\rofi\themes"))) {
         if (Test-Path -LiteralPath $dir) {
-            Get-ChildItem -LiteralPath $dir -File | Where-Object { $_.Extension -in @(".rasi", ".rasinc") } | ForEach-Object {
-                $dest = Join-Path $BundleThemes $_.Name
+            Get-ChildItem -LiteralPath $dir -File -Recurse | Where-Object { $_.Extension -in @(".rasi", ".rasinc", ".png", ".jpg", ".jpeg", ".svg", ".webp", ".ico", ".bmp") } | ForEach-Object {
+                $relative = $_.FullName.Substring((Get-Item -LiteralPath $dir).FullName.Length + 1)
+                $dest = Join-Path $BundleThemes $relative
+                New-Item -ItemType Directory -Path (Split-Path -Parent $dest) -Force | Out-Null
                 if (-not (Test-Path -LiteralPath $dest)) {
                     Copy-Item -LiteralPath $_.FullName -Destination $dest
                 }
@@ -80,6 +83,7 @@ try {
     # 1. Stage portable bundle
     New-Item -ItemType Directory -Path $PortableDir -Force | Out-Null
     Copy-Item -LiteralPath $ReleaseExe -Destination (Join-Path $PortableDir "literofi.exe")
+    Copy-Item -LiteralPath $ReleaseExe -Destination (Join-Path $PortableDir "rofi.exe")
     Copy-Item -LiteralPath $StudioExe -Destination (Join-Path $PortableDir "literofi-studio.exe")
     Copy-Item -LiteralPath (Join-Path $RepoRoot "scripts\install.ps1") -Destination (Join-Path $PortableDir "install.ps1")
     Copy-Item -LiteralPath (Join-Path $RepoRoot "scripts\uninstall.ps1") -Destination (Join-Path $PortableDir "uninstall.ps1")
@@ -92,8 +96,24 @@ try {
         }
     }
 
+    $StudioIco = Join-Path $RepoRoot "studio\studio.ico"
+    if (Test-Path -LiteralPath $StudioIco) { Copy-Item -LiteralPath $StudioIco -Destination $PortableDir }
+    $IconsSrcDir = Join-Path $RepoRoot "studio\icons"
+    if (Test-Path -LiteralPath $IconsSrcDir) {
+        $PortableIcons = Join-Path $PortableDir "icons"
+        New-Item -ItemType Directory -Path $PortableIcons -Force | Out-Null
+        Copy-Item -LiteralPath (Join-Path $IconsSrcDir "*.ico") -Destination $PortableIcons -Force
+    }
+    $RofiLicense = Join-Path $RepoRoot "reference\rofi\COPYING"
+    if (Test-Path -LiteralPath $RofiLicense) {
+        foreach ($bundleDir in @($PortableDir, $InnoStage)) {
+            Copy-Item -LiteralPath $RofiLicense -Destination (Join-Path $bundleDir "LICENSE-rofi")
+        }
+    }
     Write-Host "Creating portable archive $PortableZip ..."
     Compress-Archive -Path (Join-Path $PortableDir "*") -DestinationPath $PortableZip -Force
+
+    if ($PortableOnly) { return }
 
     # 2. Build native Windows GUI Setup.exe via Inno Setup 6
     $Iscc = @(
@@ -111,7 +131,12 @@ try {
     $StudioIco = Join-Path $RepoRoot "studio\studio.ico"
     if (Test-Path -LiteralPath $StudioIco) {
         Copy-Item -LiteralPath $StudioIco -Destination (Join-Path $InnoStage "studio.ico")
-        Copy-Item -LiteralPath $StudioIco -Destination (Join-Path $PortableDir "studio.ico")
+    }
+    $IconsSrcDir = Join-Path $RepoRoot "studio\icons"
+    if (Test-Path -LiteralPath $IconsSrcDir) {
+        $InnoIcons = Join-Path $InnoStage "icons"
+        New-Item -ItemType Directory -Path $InnoIcons -Force | Out-Null
+        Copy-Item -LiteralPath (Join-Path $IconsSrcDir "*.ico") -Destination $InnoIcons -Force
     }
     Copy-Item -LiteralPath (Join-Path $RepoRoot "README.md") -Destination (Join-Path $InnoStage "README.md")
     Copy-Item -LiteralPath (Join-Path $RepoRoot "LICENSE") -Destination (Join-Path $InnoStage "LICENSE")
@@ -126,11 +151,18 @@ try {
         throw "ISCC.exe finished without creating $SetupExe"
     }
 
-    Remove-Item -LiteralPath $InnoStage -Recurse -Force
 
     Write-Host ""
     Write-Host "Packaging complete:"
     Get-ChildItem -LiteralPath $DistDir -File | Select-Object Name, Length | Format-Table -AutoSize
 } finally {
+    if ($InnoStage -and (Test-Path -LiteralPath $InnoStage)) {
+        $stage = Get-Item -LiteralPath $InnoStage
+        if ($stage.Parent.FullName -eq (Get-Item -LiteralPath $DistDir).FullName -and
+            $stage.Name -match '^_inno_stage_[a-f0-9]{32}$' -and
+            -not ($stage.Attributes -band [IO.FileAttributes]::ReparsePoint)) {
+            Remove-Item -LiteralPath $stage.FullName -Recurse -Force
+        }
+    }
     Pop-Location
 }

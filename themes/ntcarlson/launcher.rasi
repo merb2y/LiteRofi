@@ -1,0 +1,87 @@
+/* Upstream `ntcarlson/dotfiles` (delta branch: config/rofi/launcher.rasi) */
+@import "colors.rasi"
+
+window {
+    height:                         240px;
+    width:                          100%;
+    location:                       south;
+    anchor:                         south;
+    transparency:                   "real";
+    background-color:               @background-transparent;
+    border:                         5px 0px 0px 0px;
+    border-color:                   @primary;
+}
+
+mainbox {
+    children:                       [inputbar-box, listview];
+    padding:                        12px 0px 0px 0px;
+}
+
+listview {
+    padding:                        0px;
+    dynamic:                        true;
+}
+
+inputbar-box {
+    children:                       [inputbar-side, inputbar, dummy];
+    orientation:                    horizontal;
+    expand:                         false;
+}
+
+inputbar-side {
+    border:                         5px 0px 0px 0px;
+    border-color:                   @primary;
+    margin:                         16px 0px 0px 0px;
+}
+
+inputbar {
+    children:                       [textbox-prompt, entry];
+    margin:                         0px 0px 0px 0px;
+    background-color:               @primary;
+    border:                         5px;
+    border-color:                   @primary;
+    border-radius:                  8px;
+    expand:                         false;
+}
+
+textbox-prompt {
+    font:                           "JetBrainsMono Nerd Font 14";
+    text-color:                     @background;
+    padding:                        0px 6px 0px 4px;
+    horizontal-align:               0.5;
+    vertical-align:                 0.5;
+    str:                            "";
+    expand:                         false;
+}
+
+entry {
+    expand:                         false;
+    padding:                        4px 8px;
+    horizontal-align:               0.5;
+    width:                          300px;
+    background-color:               @background;
+    border:                         2px;
+    border-color:                   @primary;
+    border-radius:                  6px;
+}
+
+element {
+    children:                       [element-icon, element-text];
+    padding:                        4px;
+    orientation:                    vertical;
+    border:                         0px;
+    border-color:                   transparent;
+}
+
+element-icon {
+    padding:                        4px;
+    border:                         4px;
+    border-color:                   transparent;
+    border-radius:                  8px;
+    size:                           96px;
+}
+
+element-text {
+    horizontal-align:               0.5;
+    width:                          200px;
+}

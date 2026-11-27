@@ -615,6 +615,24 @@ impl LaidOutTree {
             .get_distance(&icon_q, "size", Distance::px(16.0))
             .to_pixels(Orientation::Vertical, metrics)
             .clamp(4.0, f64::from(max_icon_px)) as f32;
+        let icon_w = sheet
+            .find_widget_property_aliases("element-icon", None, &["width"])
+            .map(|_| {
+                sheet
+                    .get_distance(&icon_q, "width", Distance::px(f64::from(icon_size)))
+                    .to_pixels(Orientation::Horizontal, metrics)
+                    .clamp(4.0, f64::from(workarea.w.max(256.0))) as f32
+            })
+            .unwrap_or(icon_size);
+        let icon_h = sheet
+            .find_widget_property_aliases("element-icon", None, &["height"])
+            .map(|_| {
+                sheet
+                    .get_distance(&icon_q, "height", Distance::px(f64::from(icon_size)))
+                    .to_pixels(Orientation::Vertical, metrics)
+                    .clamp(4.0, f64::from(max_icon_px)) as f32
+            })
+            .unwrap_or(icon_size);
         let icon_base_style = resolve_widget_style_with_parent(
             sheet,
             &icon_q,
@@ -673,13 +691,13 @@ impl LaidOutTree {
             + elem_style.margin[0]
             + elem_style.margin[2];
         let elem_h = if icons_active && !elem_wants_text {
-            (icon_size + icon_pad_v + elem_pad_v).ceil().max(16.0)
+            (icon_h + icon_pad_v + elem_pad_v).ceil().max(16.0)
         } else if icons_active && elem_ori == Orientation::Vertical {
-            (icon_size + icon_pad_v + elem_style.spacing + elem_line_h + txt_pad_v + elem_pad_v)
+            (icon_h + icon_pad_v + elem_style.spacing + elem_line_h + txt_pad_v + elem_pad_v)
                 .ceil()
                 .max(24.0)
         } else if icons_active {
-            ((elem_line_h + txt_pad_v).max(icon_size + icon_pad_v) + elem_pad_v)
+            ((elem_line_h + txt_pad_v).max(icon_h + icon_pad_v) + elem_pad_v)
                 .ceil()
                 .max(16.0)
         } else {
@@ -1058,15 +1076,27 @@ impl LaidOutTree {
             );
 
             let inner = inset_with_style(cell_rect, &row_style);
-            let has_icon = icons_active;
+            let entry_has_icon = state
+                .entries
+                .get(entry_index)
+                .is_some_and(|e| e.icon.is_some());
+            // For rectangular thumbnail cards (e.g. mixed image/text clipboard lists),
+            // collapse the thumbnail slot on text-only rows so text aligns cleanly to the left.
+            let has_icon = icons_active
+                && (entry_has_icon || !elem_wants_text || (icon_w - icon_h).abs() <= 0.5);
             let has_text = elem_wants_text;
 
             let fit_icon_box = |slot: Rect| -> Rect {
                 let padded = inset_with_style(slot, &ico_style);
-                let side = icon_size.min(padded.w).min(padded.h).max(0.0);
-                let ix = padded.x + (padded.w - side) * ico_style.horizontal_align;
-                let iy = padded.y + (padded.h - side) * ico_style.vertical_align;
-                Rect::new(ix, iy, side, side)
+                let (bw, bh) = if (icon_w - icon_h).abs() > 0.5 {
+                    (icon_w.min(padded.w).max(0.0), icon_h.min(padded.h).max(0.0))
+                } else {
+                    let side = icon_size.min(padded.w).min(padded.h).max(0.0);
+                    (side, side)
+                };
+                let ix = padded.x + (padded.w - bw) * ico_style.horizontal_align;
+                let iy = padded.y + (padded.h - bh) * ico_style.vertical_align;
+                Rect::new(ix, iy, bw, bh)
             };
 
             let (icon_box_rect, icon_rect, text_box_rect, text_rect) = match (has_icon, has_text) {
@@ -1079,7 +1109,7 @@ impl LaidOutTree {
                 (false, true) => (None, None, inner, inset_with_style(inner, &text_style)),
                 (false, false) => (None, None, Rect::ZERO, Rect::ZERO),
                 (true, true) => {
-                    let ico_box_w = (icon_size
+                    let ico_box_w = (icon_w
                         + ico_style.padding[1]
                         + ico_style.padding[3]
                         + ico_style.border[1]
@@ -1087,7 +1117,7 @@ impl LaidOutTree {
                         + ico_style.margin[1]
                         + ico_style.margin[3])
                         .round() as i32;
-                    let ico_box_h = (icon_size
+                    let ico_box_h = (icon_h
                         + ico_style.padding[0]
                         + ico_style.padding[2]
                         + ico_style.border[0]
@@ -1136,7 +1166,7 @@ impl LaidOutTree {
             cells.push(LaidOutCell {
                 filtered_pos,
                 entry_index,
-                rect: cell_rect,
+                rect: margin_inset_with_style(cell_rect, &row_style),
                 icon_box_rect,
                 icon_rect,
                 icon_style: ico_style,
@@ -1417,6 +1447,7 @@ impl<'a> TreeBuilder<'a> {
         let mut active = 0i32;
         let mut sum_w = 0i32;
         let mut max_w = 0i32;
+        let mut max_w_non_expand = 0i32;
         let mut sum_h = 0i32;
         let mut max_h = 0i32;
         for cname in child_names {
@@ -1436,6 +1467,9 @@ impl<'a> TreeBuilder<'a> {
             active += 1;
             sum_w += spec.desired_w.max(0);
             max_w = max_w.max(spec.desired_w.max(0));
+            if !spec.expand && spec.desired_w > 0 {
+                max_w_non_expand = max_w_non_expand.max(spec.desired_w);
+            }
             sum_h += spec.desired_h.max(0);
             max_h = max_h.max(spec.desired_h.max(0));
         }
@@ -1445,7 +1479,14 @@ impl<'a> TreeBuilder<'a> {
         let gap = (active - 1) * (spacing.round() as i32);
         match ori {
             Orientation::Horizontal => ((sum_w + gap).min(avail.w.round() as i32), max_h),
-            Orientation::Vertical => (max_w.min(avail.w.round() as i32), sum_h + gap),
+            Orientation::Vertical => {
+                let eff_w = if max_w_non_expand > 0 {
+                    max_w_non_expand
+                } else {
+                    max_w
+                };
+                (eff_w.min(avail.w.round() as i32), sum_h + gap)
+            }
         }
     }
 
@@ -1578,11 +1619,12 @@ impl<'a> TreeBuilder<'a> {
                 &style.font,
                 depth,
             );
-            let box_w = if matches!(name, "inputbar" | "mainbox" | "message") {
-                avail.w.round() as i32
-            } else {
-                (cw as f32 + pad_w).ceil() as i32
-            };
+            let box_w =
+                if matches!(name, "mainbox" | "message") || (name == "inputbar" && style.expand) {
+                    avail.w.round() as i32
+                } else {
+                    (cw as f32 + pad_w).ceil() as i32
+                };
             (box_w, (ch as f32 + pad_h).ceil() as i32)
         } else {
             match name {
@@ -1781,10 +1823,10 @@ impl<'a> TreeBuilder<'a> {
         };
 
         if let Some(w) = explicit_w {
-            dw = w;
+            dw = w + (style.margin[1] + style.margin[3]).round() as i32;
         }
         if let Some(h) = explicit_h {
-            dh = h;
+            dh = h + (style.margin[0] + style.margin[2]).round() as i32;
         }
 
         (

@@ -1,0 +1,111 @@
+/* LiteRofi Mango Minimal — inspired by 1ulisses' MangoWM / Rembrandt rice */
+@theme "/dev/null"
+
+* {
+    bg:          #080706;
+    bg-alt:      #141210;
+    bg-sel:      #1f1b17;
+    fg:          #d8ccb8;
+    fg-sel:      #f2e5bc;
+    fg-muted:    #7c7265;
+    border:      #a89984;
+    accent:      #c8a97e;
+    urgent:      #cc6666;
+    active:      #b5bd68;
+
+    background-color: transparent;
+    text-color:       @fg;
+    font:             "JetBrainsMono NF 10";
+}
+
+window {
+    width:            390px;
+    padding:          10px 12px;
+    border:           1px;
+    border-radius:    0px;
+    border-color:     @border;
+    background-color: @bg;
+    location:         center;
+    anchor:           center;
+}
+
+mainbox {
+    spacing:          6px;
+    children:         [ inputbar, message, listview ];
+}
+
+inputbar {
+    padding:          2px 4px 6px 4px;
+    spacing:          4px;
+    border:           0px;
+    border-radius:    0px;
+    background-color: transparent;
+    children:         [ textbox-prompt-colon, entry ];
+}
+
+textbox-prompt-colon {
+    expand:           false;
+    str:              "> ";
+    text-color:       @fg;
+}
+
+entry {
+    placeholder:       "";
+    placeholder-color: @fg-muted;
+    text-color:        @fg-sel;
+}
+
+message {
+    padding:          6px 8px;
+    border:           1px;
+    border-radius:    0px;
+    border-color:     @bg-sel;
+    background-color: @bg-alt;
+}
+
+listview {
+    columns:          1;
+    lines:            8;
+    spacing:          2px;
+    fixed-height:     true;
+    scrollbar:        false;
+}
+
+element {
+    orientation:      horizontal;
+    padding:          5px 6px;
+    spacing:          10px;
+    border-radius:    0px;
+    children:         [ element-icon, element-text ];
+}
+
+element normal.normal,
+element alternate.normal {
+    background-color: transparent;
+    text-color:       @fg;
+}
+
+element selected.normal {
+    background-color: @bg-sel;
+    text-color:       @fg-sel;
+}
+
+element normal.urgent,
+element alternate.urgent {
+    text-color:       @urgent;
+}
+
+element normal.active,
+element alternate.active {
+    text-color:       @active;
+}
+
+element-icon {
+    size:             20px;
+    vertical-align:   0.5;
+}
+
+element-text {
+    vertical-align:   0.5;
+    text-color:       inherit;
+}

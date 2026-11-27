@@ -7,8 +7,8 @@ use crate::pango::parse_pango_markup;
 use crate::state::{LauncherState, ListEntry, UiOutcome};
 use crate::tree::{effective_base_font, LaidOutTree, LaidOutWidget, RenderWidgetKind, WidgetStyle};
 use crate::win32_icons::{
-    draw_bitmap_fitted_aligned, draw_bitmap_scaled, freedesktop_symbolic_glyph, IconCache,
-    WM_APP_ICON_READY,
+    draw_bitmap_cover_aligned, draw_bitmap_fitted_aligned, draw_bitmap_scaled,
+    freedesktop_symbolic_glyph, IconCache, WM_APP_ICON_READY,
 };
 use literofi_core::config::Config;
 use literofi_core::keyb::{parse_chord_list, KeyBindingAction};
@@ -66,22 +66,26 @@ use windows::Win32::System::DataExchange::{
 };
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::System::Memory::{GlobalAlloc, GlobalLock, GlobalUnlock, GMEM_MOVEABLE};
+use windows::Win32::System::Threading::{AttachThreadInput, GetCurrentThreadId};
 use windows::Win32::UI::HiDpi::{
     GetDpiForMonitor, GetDpiForWindow, SetProcessDpiAwarenessContext,
     DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2, MDT_EFFECTIVE_DPI,
 };
 use windows::Win32::UI::Input::KeyboardAndMouse::{
-    GetKeyState, ReleaseCapture, SetCapture, SetFocus, VK_BACK, VK_CONTROL, VK_DELETE, VK_DOWN,
-    VK_END, VK_ESCAPE, VK_HOME, VK_INSERT, VK_LEFT, VK_LWIN, VK_MENU, VK_NEXT, VK_PRIOR, VK_RETURN,
-    VK_RIGHT, VK_RWIN, VK_SHIFT, VK_TAB, VK_UP,
+    keybd_event, GetKeyState, ReleaseCapture, SetActiveWindow, SetCapture, SetFocus,
+    KEYBD_EVENT_FLAGS, KEYEVENTF_KEYUP, VK_BACK, VK_CONTROL, VK_DELETE, VK_DOWN, VK_END, VK_ESCAPE,
+    VK_HOME, VK_INSERT, VK_LEFT, VK_LWIN, VK_MENU, VK_NEXT, VK_PRIOR, VK_RETURN, VK_RIGHT, VK_RWIN,
+    VK_SHIFT, VK_TAB, VK_UP,
 };
 use windows::Win32::UI::WindowsAndMessaging::{
-    CreateWindowExW, DefWindowProcW, DestroyWindow, DispatchMessageW, GetCursorPos,
-    GetWindowLongPtrW, IsWindowVisible, LoadCursorW, PostQuitMessage, RegisterClassExW, SetCursor,
-    SetForegroundWindow, SetWindowLongPtrW, ShowWindow, SystemParametersInfoW, TranslateMessage,
-    UpdateLayeredWindow, CREATESTRUCTW, CW_USEDEFAULT, GWLP_USERDATA, IDC_ARROW, IDC_HAND,
-    IDC_IBEAM, MSG, SPI_GETDESKWALLPAPER, SW_HIDE, SW_SHOW, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS,
-    ULW_ALPHA, WM_ACTIVATE, WM_CHAR, WM_CLOSE, WM_CREATE, WM_DESTROY, WM_DPICHANGED, WM_ERASEBKGND,
+    BringWindowToTop, CreateWindowExW, DefWindowProcW, DestroyWindow, DispatchMessageW,
+    GetCursorPos, GetForegroundWindow, GetWindowLongPtrW, GetWindowThreadProcessId,
+    IsWindowVisible, LoadCursorW, PostQuitMessage, RegisterClassExW, SetCursor,
+    SetForegroundWindow, SetWindowLongPtrW, SetWindowPos, ShowWindow, SystemParametersInfoW,
+    TranslateMessage, UpdateLayeredWindow, CREATESTRUCTW, CW_USEDEFAULT, GWLP_USERDATA,
+    HWND_TOPMOST, IDC_ARROW, IDC_HAND, IDC_IBEAM, MSG, SPI_GETDESKWALLPAPER, SWP_NOMOVE,
+    SWP_NOSIZE, SWP_SHOWWINDOW, SW_HIDE, SW_SHOW, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS, ULW_ALPHA,
+    WM_ACTIVATE, WM_CHAR, WM_CLOSE, WM_CREATE, WM_DESTROY, WM_DPICHANGED, WM_ERASEBKGND,
     WM_KEYDOWN, WM_LBUTTONDOWN, WM_LBUTTONUP, WM_MOUSEMOVE, WM_MOUSEWHEEL, WM_NCCREATE,
     WM_NCDESTROY, WM_PAINT, WM_RBUTTONDOWN, WM_SIZE, WM_SYSKEYDOWN, WNDCLASSEXW, WS_EX_LAYERED,
     WS_EX_TOOLWINDOW, WS_EX_TOPMOST, WS_POPUP,
@@ -789,6 +793,48 @@ unsafe fn set_window_cloaked(hwnd: HWND, cloaked: bool) {
     );
 }
 
+/// Reliably brings the topmost popup to the foreground on Windows 10/11 (same proven sequence
+/// as DosyaBul: attaches foreground thread input, asserts HWND_TOPMOST + BringWindowToTop,
+/// and unlocks Windows' foreground lock with neutral VK 0xE8 only if SetForegroundWindow fails).
+unsafe fn activate_popup_window(hwnd: HWND) {
+    let fg = GetForegroundWindow();
+    let fg_tid = if !fg.0.is_null() {
+        GetWindowThreadProcessId(fg, None)
+    } else {
+        0
+    };
+    let cur_tid = GetCurrentThreadId();
+    let attached = fg_tid != 0
+        && cur_tid != 0
+        && fg_tid != cur_tid
+        && AttachThreadInput(fg_tid, cur_tid, true).as_bool();
+
+    let _ = ShowWindow(hwnd, SW_SHOW);
+    set_window_cloaked(hwnd, false);
+    let _ = SetWindowPos(
+        hwnd,
+        HWND_TOPMOST,
+        0,
+        0,
+        0,
+        0,
+        SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW,
+    );
+    let _ = BringWindowToTop(hwnd);
+    if !SetForegroundWindow(hwnd).as_bool() {
+        // Neutral unassigned VK (0xE8) unlocks Windows' foreground lock without Alt/Win side effects.
+        keybd_event(0xE8, 0, KEYBD_EVENT_FLAGS(0), 0);
+        keybd_event(0xE8, 0, KEYEVENTF_KEYUP, 0);
+        let _ = SetForegroundWindow(hwnd);
+    }
+    let _ = SetActiveWindow(hwnd);
+    let _ = SetFocus(hwnd);
+
+    if attached {
+        let _ = AttachThreadInput(fg_tid, cur_tid, false);
+    }
+}
+
 struct WindowCtx {
     sheet: ThemeSheet,
     cfg: Config,
@@ -799,6 +845,7 @@ struct WindowCtx {
     async_icons: bool,
     quit_on_outcome: bool,
     suppress_deactivate: bool,
+    shown_at: Option<std::time::Instant>,
     layout: LaidOutTree,
     res: D2dResources,
     outcome: Option<UiOutcome>,
@@ -1092,6 +1139,23 @@ impl WindowCtx {
     }
 
     fn paint(&mut self, hwnd: HWND) -> Result<usize, String> {
+        for attempt in 0..2 {
+            match self.paint_once(hwnd) {
+                Ok(n) => return Ok(n),
+                Err(_) if attempt == 0 => {
+                    self.res.dc_rt = None;
+                    if let Some(icons) = &mut self.res.icons {
+                        icons.clear();
+                    }
+                    continue;
+                }
+                Err(e) => return Err(e),
+            }
+        }
+        Err("ID2D1DCRenderTarget::paint failed after recreate".to_string())
+    }
+
+    fn paint_once(&mut self, hwnd: HWND) -> Result<usize, String> {
         let fs = sheet_is_fullscreen(&self.sheet);
         let (phys_x, phys_y, phys_w, phys_h) = dip_rect_to_phys(
             self.layout.window_rect,
@@ -1151,6 +1215,7 @@ impl WindowCtx {
                     if let Some(icons) = &mut self.res.icons {
                         icons.clear();
                     }
+                    return Err("D2DERR_RECREATE_TARGET".to_string());
                 } else {
                     return Err(format!("ID2D1DCRenderTarget::EndDraw failed: {err}"));
                 }
@@ -1311,9 +1376,9 @@ unsafe fn paint_node(
                             let ico_paint = margin_inset(ico_box, cell.icon_style.margin);
                             paint_box_fill(rt, res, ico_paint, &cell.icon_style)?;
                             if let Some(icon_r) = cell.icon_rect {
-                                let size_px = (f64::from(icon_r.w.min(icon_r.h)) * dpi_scale)
+                                let size_px = (f64::from(icon_r.w.max(icon_r.h)) * dpi_scale)
                                     .round()
-                                    .clamp(16.0, 256.0)
+                                    .clamp(16.0, 512.0)
                                     as u32;
                                 let bmp_opt = entry.icon.as_deref().and_then(|spec| {
                                     res.icons.as_mut().and_then(|cache| {
@@ -1325,13 +1390,53 @@ unsafe fn paint_node(
                                     })
                                 });
                                 if let Some(bmp) = bmp_opt {
-                                    draw_bitmap_fitted_aligned(
-                                        rt,
-                                        &bmp,
-                                        icon_r,
-                                        cell.icon_style.horizontal_align,
-                                        cell.icon_style.vertical_align,
-                                    );
+                                    let ico_radii =
+                                        clamp_corner_radii(icon_r, cell.icon_style.border_radius);
+                                    let ico_clip_layer = if ico_radii.iter().any(|&r| r > 0.25) {
+                                        make_rounded_geometry(&res.d2d, icon_r, ico_radii).map(
+                                            |geom| {
+                                                let lp = D2D1_LAYER_PARAMETERS {
+                                                    contentBounds: d2d_rect(icon_r),
+                                                    geometricMask: std::mem::ManuallyDrop::new(
+                                                        Some(geom),
+                                                    ),
+                                                    maskAntialiasMode:
+                                                        D2D1_ANTIALIAS_MODE_PER_PRIMITIVE,
+                                                    maskTransform: Matrix3x2::identity(),
+                                                    opacity: 1.0,
+                                                    opacityBrush: std::mem::ManuallyDrop::new(None),
+                                                    layerOptions: D2D1_LAYER_OPTIONS_NONE,
+                                                };
+                                                rt.PushLayer(&lp, None);
+                                                std::mem::ManuallyDrop::into_inner(lp.geometricMask)
+                                            },
+                                        )
+                                    } else {
+                                        None
+                                    };
+                                    let is_rectangular_card =
+                                        (icon_r.w - icon_r.h).abs() > icon_r.w.min(icon_r.h) * 0.20;
+                                    if is_rectangular_card {
+                                        draw_bitmap_cover_aligned(
+                                            rt,
+                                            &bmp,
+                                            icon_r,
+                                            cell.icon_style.horizontal_align,
+                                            cell.icon_style.vertical_align,
+                                        );
+                                    } else {
+                                        draw_bitmap_fitted_aligned(
+                                            rt,
+                                            &bmp,
+                                            icon_r,
+                                            cell.icon_style.horizontal_align,
+                                            cell.icon_style.vertical_align,
+                                        );
+                                    }
+                                    if let Some(guard) = ico_clip_layer {
+                                        rt.PopLayer();
+                                        drop(guard);
+                                    }
                                     *icons_drawn += 1;
                                 } else if let Some(spec) = entry.icon.as_deref() {
                                     if let Some(glyph) = freedesktop_symbolic_glyph(spec) {
@@ -1356,10 +1461,12 @@ unsafe fn paint_node(
                             if cell.text_rect.w > 1.0 && cell.text_rect.h > 1.0 {
                                 let label = entry.visible_label();
                                 let spans = state.match_highlight_ranges(label);
-                                let use_markup = cfg.markup_rows
-                                    || label.contains("<span")
-                                    || label.contains("<i>")
-                                    || label.contains("<b>");
+                                let use_markup = state.markup_rows_override.unwrap_or(
+                                    cfg.markup_rows
+                                        || label.contains("<span")
+                                        || label.contains("<i>")
+                                        || label.contains("<b>"),
+                                );
                                 draw_styled_text_ex(
                                     rt,
                                     res,
@@ -2247,9 +2354,9 @@ unsafe fn paint_widget_content(
                 Some(s) if !s.is_empty() => Some(s),
                 _ => None,
             };
-            let size_px = (f64::from(w.inner_rect.w.min(w.inner_rect.h)) * dpi_scale)
+            let size_px = (f64::from(w.inner_rect.w.max(w.inner_rect.h)) * dpi_scale)
                 .round()
-                .clamp(16.0, 256.0) as u32;
+                .clamp(16.0, 1024.0) as u32;
             let bmp_opt = resolved_spec.and_then(|s| {
                 res.icons
                     .as_mut()
@@ -2994,11 +3101,14 @@ unsafe extern "system" fn wnd_proc(
                     if ctx.cfg.hover_select {
                         if let Some(cell) = ctx.layout.cells.iter().find(|c| c.rect.contains(x, y))
                         {
-                            let fp = cell.filtered_pos;
-                            if ctx.state.selected != fp {
-                                ctx.state.selected = fp;
-                                ctx.relayout(hwnd);
-                                let _ = ctx.paint(hwnd);
+                            let idx = cell.entry_index;
+                            if !ctx.state.entries[idx].nonselectable {
+                                let fp = cell.filtered_pos;
+                                if ctx.state.selected != fp {
+                                    ctx.state.selected = fp;
+                                    ctx.relayout(hwnd);
+                                    let _ = ctx.paint(hwnd);
+                                }
                             }
                         }
                     }
@@ -3028,13 +3138,30 @@ unsafe extern "system" fn wnd_proc(
                 } else if let Some(cell) = ctx.layout.cells.iter().find(|c| c.rect.contains(x, y)) {
                     let idx = cell.entry_index;
                     if !ctx.state.entries[idx].nonselectable {
-                        ctx.state.selected = cell.filtered_pos;
-                        ctx.outcome = Some(UiOutcome::Accepted {
-                            index: idx,
-                            text: ctx.state.entries[idx].text.clone(),
-                            exit_code: 0,
-                        });
-                        should_quit = ctx.quit_on_outcome;
+                        let fp = cell.filtered_pos;
+                        let single_click_accept = ctx
+                            .cfg
+                            .me_accept_entry
+                            .split(',')
+                            .any(|t| t.trim().eq_ignore_ascii_case("MousePrimary"))
+                            || !ctx
+                                .cfg
+                                .me_select_entry
+                                .split(',')
+                                .any(|t| t.trim().eq_ignore_ascii_case("MousePrimary"));
+                        if single_click_accept || ctx.state.selected == fp {
+                            ctx.state.selected = fp;
+                            ctx.outcome = Some(UiOutcome::Accepted {
+                                index: idx,
+                                text: ctx.state.entries[idx].text.clone(),
+                                exit_code: 0,
+                            });
+                            should_quit = ctx.quit_on_outcome;
+                        } else {
+                            ctx.state.selected = fp;
+                            ctx.relayout(hwnd);
+                            let _ = ctx.paint(hwnd);
+                        }
                     }
                 } else if let Some(act_name) = ctx
                     .layout
@@ -3120,7 +3247,14 @@ unsafe extern "system" fn wnd_proc(
             if active == 0 && IsWindowVisible(hwnd).as_bool() {
                 let mut should_quit = false;
                 if let Ok(mut ctx) = ctx_rc.try_borrow_mut() {
-                    if !ctx.suppress_deactivate && ctx.cfg.click_to_exit && ctx.outcome.is_none() {
+                    let in_show_grace = ctx
+                        .shown_at
+                        .is_some_and(|t| t.elapsed() < std::time::Duration::from_millis(220));
+                    if !ctx.suppress_deactivate
+                        && !in_show_grace
+                        && ctx.cfg.click_to_exit
+                        && ctx.outcome.is_none()
+                    {
                         ctx.outcome = Some(UiOutcome::Cancelled);
                         should_quit = ctx.quit_on_outcome;
                     }
@@ -3227,6 +3361,7 @@ pub fn run_render_self_test(
         outcome: None,
         dragging_sb: false,
         backdrop_blur: None,
+        shown_at: None,
     }));
 
     // SAFETY: Creating a temporary hidden layered popup HWND bound to `ctx_rc` on the same stack/thread.
@@ -3435,6 +3570,7 @@ pub fn run_render_dump_png(
         outcome: None,
         dragging_sb: false,
         backdrop_blur: None,
+        shown_at: None,
     }));
 
     // SAFETY: Hidden offscreen layered HWND used solely to execute the exact `WindowCtx::paint` path.
@@ -3674,6 +3810,7 @@ pub fn run_interactive(
         outcome: None,
         dragging_sb: false,
         backdrop_blur: None,
+        shown_at: None,
     }));
 
     let ex_style = WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED;
@@ -3808,6 +3945,7 @@ impl ResidentPopup {
             outcome: None,
             dragging_sb: false,
             backdrop_blur: None,
+            shown_at: None,
         }));
 
         let ex_style = WS_EX_TOPMOST | WS_EX_TOOLWINDOW | WS_EX_LAYERED;
@@ -3855,9 +3993,20 @@ impl ResidentPopup {
         Ok(popup)
     }
 
+    pub fn is_alive(&self) -> bool {
+        // SAFETY: Queries Win32 window validity for our owned HWND.
+        !self.hwnd.0.is_null()
+            && unsafe { windows::Win32::UI::WindowsAndMessaging::IsWindow(self.hwnd).as_bool() }
+    }
+
     pub fn is_visible(&self) -> bool {
         // SAFETY: Valid owned HWND.
-        unsafe { IsWindowVisible(self.hwnd).as_bool() }
+        self.is_alive() && unsafe { IsWindowVisible(self.hwnd).as_bool() }
+    }
+
+    pub fn is_foreground(&self) -> bool {
+        // SAFETY: Compares current foreground window against our owned popup HWND.
+        self.is_alive() && unsafe { GetForegroundWindow() == self.hwnd }
     }
 
     pub fn prewarm_frame(&mut self) -> Result<usize, String> {
@@ -3976,6 +4125,9 @@ impl ResidentPopup {
     }
 
     pub fn prepare_and_show(&mut self) -> Result<(), String> {
+        if !self.is_alive() {
+            return Err("resident popup HWND is no longer valid".to_string());
+        }
         let mon_m = query_active_monitor();
         {
             let mut ctx = self.ctx_rc.borrow_mut();
@@ -3994,21 +4146,26 @@ impl ResidentPopup {
         }
 
         // SAFETY: Captures live desktop behind hidden popup for frosted-glass blur, paints
-        // premultiplied ARGB surface via UpdateLayeredWindow BEFORE reveal, then shows atomically.
-        unsafe {
+        // premultiplied ARGB surface via UpdateLayeredWindow BEFORE reveal, then activates
+        // cleanly on top using DosyaBul's foreground-lock-safe activation sequence.
+        let paint_res = unsafe {
             set_window_cloaked(self.hwnd, true);
-            {
+            let res = {
                 let mut ctx = self.ctx_rc.borrow_mut();
                 ctx.capture_backdrop_if_needed();
-                let _ = ctx.paint(self.hwnd);
+                let r = ctx.paint(self.hwnd);
+                ctx.shown_at = Some(std::time::Instant::now());
+                r
+            };
+            if res.is_ok() {
+                activate_popup_window(self.hwnd);
+            } else {
+                set_window_cloaked(self.hwnd, false);
             }
-            let _ = ShowWindow(self.hwnd, SW_SHOW);
-            set_window_cloaked(self.hwnd, false);
-            let _ = SetForegroundWindow(self.hwnd);
-            let _ = SetFocus(self.hwnd);
-        }
+            res
+        };
         self.ctx_rc.borrow_mut().suppress_deactivate = false;
-        Ok(())
+        paint_res.map(|_| ())
     }
 
     pub fn hide(&mut self) {

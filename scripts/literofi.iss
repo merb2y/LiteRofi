@@ -2,7 +2,7 @@
 ; Builds a standalone, zero-dependency Windows wizard installer with EN (default) + TR languages.
 
 #ifndef AppVersion
-  #define AppVersion "0.1.0"
+  #define AppVersion "0.2.0"
 #endif
 #ifndef StageDir
   #define StageDir "..\dist\_inno_stage"
@@ -30,7 +30,7 @@ SolidCompression=yes
 WizardStyle=modern
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
-UninstallDisplayIcon={app}\literofi.exe
+UninstallDisplayIcon={app}\icons\literofi.ico
 CloseApplications=yes
 RestartApplications=no
 SetupLogging=no
@@ -88,12 +88,15 @@ Name: "addpath"; Description: "{cm:TaskAddPath}"; GroupDescription: "{cm:TaskGro
 [Files]
 ; Core binaries & docs
 Source: "{#StageDir}\literofi.exe"; DestDir: "{app}"; Components: core; Flags: ignoreversion
+Source: "{#StageDir}\literofi.exe"; DestDir: "{app}"; DestName: "rofi.exe"; Components: core; Flags: ignoreversion
 Source: "{#StageDir}\README.md"; DestDir: "{app}"; Components: core; Flags: ignoreversion skipifsourcedoesntexist
 Source: "{#StageDir}\LICENSE"; DestDir: "{app}"; Components: core; Flags: ignoreversion skipifsourcedoesntexist
+Source: "{#StageDir}\LICENSE-rofi"; DestDir: "{app}"; Components: core; Flags: ignoreversion skipifsourcedoesntexist
 
-; Optional Theme Studio native binary + custom icon (zero dependencies)
+; Optional Theme Studio native binary + custom icons (zero dependencies)
 Source: "{#StageDir}\literofi-studio.exe"; DestDir: "{app}"; Components: studio; Flags: ignoreversion
 Source: "{#StageDir}\studio.ico"; DestDir: "{app}"; Components: studio; Flags: ignoreversion skipifsourcedoesntexist
+Source: "{#StageDir}\icons\*.ico"; DestDir: "{app}\icons"; Components: core; Flags: ignoreversion skipifsourcedoesntexist
 
 ; Themes, color palettes, images, launchers, wallust (preserve existing user edits)
 Source: "{#StageDir}\assets\themes\*"; DestDir: "{userappdata}\LiteRofi\themes"; Components: assets; Flags: recursesubdirs createallsubdirs onlyifdoesntexist skipifsourcedoesntexist
@@ -103,20 +106,24 @@ Source: "{#StageDir}\assets\launchers\*"; DestDir: "{userappdata}\LiteRofi\launc
 Source: "{#StageDir}\assets\wallust\*"; DestDir: "{userappdata}\LiteRofi\wallust"; Components: assets; Flags: recursesubdirs createallsubdirs onlyifdoesntexist skipifsourcedoesntexist
 
 [Icons]
-Name: "{group}\LiteRofi"; Filename: "{app}\literofi.exe"; Parameters: "-show drun"; IconFilename: "{app}\literofi.exe"
+Name: "{group}\LiteRofi"; Filename: "{app}\literofi.exe"; Parameters: "-show drun"; IconFilename: "{app}\icons\literofi.ico"
+Name: "{group}\LiteRofi System Menu"; Filename: "{app}\literofi.exe"; Parameters: "-show menu"; IconFilename: "{app}\icons\literofi.ico"
 Name: "{group}\LiteRofi Theme Studio"; Filename: "{app}\literofi-studio.exe"; IconFilename: "{app}\studio.ico"; Components: studio
-Name: "{group}\LiteRofi Theme Selector"; Filename: "{app}\literofi.exe"; Parameters: "-show theme"; IconFilename: "{app}\literofi.exe"
-Name: "{group}\LiteRofi Color Palette"; Filename: "{app}\literofi.exe"; Parameters: "-show colors"; IconFilename: "{app}\literofi.exe"
-Name: "{group}\LiteRofi Music"; Filename: "{app}\literofi.exe"; Parameters: "-show music -theme music-player"; IconFilename: "{app}\literofi.exe"
-Name: "{group}\LiteRofi Settings"; Filename: "{app}\literofi.exe"; Parameters: "--settings"; IconFilename: "{app}\literofi.exe"
-Name: "{group}\LiteRofi Themes Folder"; Filename: "{app}\literofi.exe"; Parameters: "--themes-dir"; IconFilename: "{app}\literofi.exe"
+Name: "{group}\LiteRofi Theme Selector"; Filename: "{app}\literofi.exe"; Parameters: "-show theme"; IconFilename: "{app}\icons\themes.ico"
+Name: "{group}\LiteRofi Color Palette"; Filename: "{app}\literofi.exe"; Parameters: "-show colors"; IconFilename: "{app}\icons\palette.ico"
+Name: "{group}\LiteRofi Wallpaper"; Filename: "{app}\literofi.exe"; Parameters: "-show wallpaper"; IconFilename: "{app}\icons\themes.ico"
+Name: "{group}\LiteRofi Music"; Filename: "{app}\literofi.exe"; Parameters: "-show music -theme music-player"; IconFilename: "{app}\icons\music.ico"
+Name: "{group}\LiteRofi Power Menu"; Filename: "{app}\literofi.exe"; Parameters: "-show power -theme powermenu"; IconFilename: "{app}\icons\power.ico"
+Name: "{group}\LiteRofi Games"; Filename: "{app}\literofi.exe"; Parameters: "-show games -theme game-launcher"; IconFilename: "{app}\icons\games.ico"
+Name: "{group}\LiteRofi Settings"; Filename: "{app}\literofi.exe"; Parameters: "--settings"; IconFilename: "{app}\icons\settings.ico"
+Name: "{group}\LiteRofi Themes Folder"; Filename: "{app}\literofi.exe"; Parameters: "--themes-dir"; IconFilename: "{app}\icons\settings.ico"
 Name: "{group}\{cm:IconUninstall}"; Filename: "{uninstallexe}"
 
 ; Desktop shortcut for Theme Studio (optional task)
 Name: "{userdesktop}\LiteRofi Theme Studio"; Filename: "{app}\literofi-studio.exe"; IconFilename: "{app}\studio.ico"; Components: studio; Tasks: desktopstudio
 
 ; Windows Startup shortcut for background daemon (optional task)
-Name: "{userstartup}\LiteRofi Daemon"; Filename: "{app}\literofi.exe"; Parameters: "--start-daemon"; IconFilename: "{app}\literofi.exe"; Tasks: autostart
+Name: "{userstartup}\LiteRofi Daemon"; Filename: "{app}\literofi.exe"; Parameters: "--start-daemon"; IconFilename: "{app}\icons\literofi.ico"; Tasks: autostart
 
 [Run]
 Filename: "{app}\literofi.exe"; Parameters: "--start-daemon"; Description: "{cm:RunDaemon}"; Flags: nowait postinstall runhidden

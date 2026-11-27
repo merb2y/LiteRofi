@@ -19,8 +19,9 @@ use windows::Win32::Graphics::Direct2D::{
 use windows::Win32::Graphics::Dxgi::Common::DXGI_FORMAT_B8G8R8A8_UNORM;
 use windows::Win32::Graphics::Gdi::{DeleteObject, HBITMAP};
 use windows::Win32::Graphics::Imaging::{
-    CLSID_WICImagingFactory, GUID_WICPixelFormat32bppPBGRA, IWICBitmapSource, IWICFormatConverter,
-    IWICImagingFactory, WICBitmapDitherTypeNone, WICBitmapIgnoreAlpha,
+    CLSID_WICImagingFactory, GUID_WICPixelFormat32bppPBGRA, IWICBitmapScaler, IWICBitmapSource,
+    IWICFormatConverter, IWICImagingFactory, WICBitmapDitherTypeNone, WICBitmapIgnoreAlpha,
+    WICBitmapInterpolationModeFant, WICBitmapInterpolationModeHighQualityCubic,
     WICBitmapPaletteTypeMedianCut, WICBitmapUseAlpha, WICDecodeMetadataCacheOnLoad,
 };
 use windows::Win32::Storage::FileSystem::FILE_FLAGS_AND_ATTRIBUTES;
@@ -197,6 +198,12 @@ impl IconCache {
         any
     }
 
+    /// Drops cached and pending entries for `path_str` so a freshly downloaded thumbnail re-decodes cleanly.
+    pub fn invalidate_path(&mut self, path_str: &str) {
+        self.cache.retain(|k, _| k.0 != path_str);
+        self.pending.retain(|k| k.0 != path_str);
+    }
+
     /// Resolves and caches a Direct2D bitmap for `spec` (`hwnd:<id>`, `shell:AppsFolder\<AUMID>`,
     /// direct image file, `.lnk`, `.exe`, or folder/file path).
     pub fn get_or_load(
@@ -247,7 +254,7 @@ impl IconCache {
         }
         let path = Path::new(trimmed);
         let loaded = if path.is_file() {
-            self.load_image_file(rt, path, None)
+            self.load_image_file(rt, path, 2048, None)
         } else {
             None
         };
@@ -269,7 +276,7 @@ impl IconCache {
 
         let path = Path::new(spec);
         if (is_image_file_ext(path) || path.extension().is_none()) && path.is_file() {
-            if let Some(bmp) = self.load_image_file(rt, path, save_path) {
+            if let Some(bmp) = self.load_image_file(rt, path, bucket_px, save_path) {
                 return Some(bmp);
             }
         }
@@ -295,6 +302,7 @@ impl IconCache {
         &self,
         rt: &ID2D1RenderTarget,
         path: &Path,
+        max_dim: u32,
         save_path: Option<&Path>,
     ) -> Option<ID2D1Bitmap> {
         let wpath = HSTRING::from(path.as_os_str());
@@ -306,7 +314,7 @@ impl IconCache {
                 .ok()?;
             let frame = decoder.GetFrame(0).ok()?;
             let src: IWICBitmapSource = frame.into();
-            self.wic_source_to_d2d(rt, &src, save_path)
+            self.wic_source_to_d2d(rt, &src, max_dim, save_path)
         }
     }
 
@@ -423,7 +431,7 @@ impl IconCache {
             })
             .ok()?;
         let src: IWICBitmapSource = wic_bmp.into();
-        self.wic_source_to_d2d(rt, &src, save_path)
+        self.wic_source_to_d2d(rt, &src, 256, save_path)
     }
 
     unsafe fn hicon_to_d2d(
@@ -434,17 +442,18 @@ impl IconCache {
     ) -> Option<ID2D1Bitmap> {
         let wic_bmp = self.wic.CreateBitmapFromHICON(hicon).ok()?;
         let src: IWICBitmapSource = wic_bmp.into();
-        self.wic_source_to_d2d(rt, &src, save_path)
+        self.wic_source_to_d2d(rt, &src, 256, save_path)
     }
 
     unsafe fn wic_source_to_d2d(
         &self,
         rt: &ID2D1RenderTarget,
         src: &IWICBitmapSource,
+        max_dim: u32,
         save_path: Option<&Path>,
     ) -> Option<ID2D1Bitmap> {
         if let Some(disk_path) = save_path {
-            let decoded = wic_source_to_pbgra(&self.wic, src, 256)?;
+            let decoded = wic_source_to_pbgra(&self.wic, src, max_dim.max(256))?;
             save_disk_cached_pixels(disk_path, decoded.w, decoded.h, &decoded.pixels);
             return create_d2d_bitmap_from_pbgra(rt, decoded.w, decoded.h, &decoded.pixels);
         }
@@ -491,7 +500,7 @@ fn extract_icon_pixels(
                 .and_then(|d| d.GetFrame(0).ok())
                 .and_then(|f| {
                     let src: IWICBitmapSource = f.into();
-                    wic_source_to_pbgra(wic, &src, 256)
+                    wic_source_to_pbgra(wic, &src, bucket_px.max(256))
                 })
         };
         if decoded.is_some() {
@@ -656,14 +665,89 @@ fn normalize_icon_pixels(dec: DecodedIconPixels) -> DecodedIconPixels {
     }
 }
 
+fn sharpen_pbgra_cas(pixels: &mut [u8], w: u32, h: u32, strength: f32) {
+    if w < 3 || h < 3 || strength <= 0.0 || pixels.len() < (w as usize) * (h as usize) * 4 {
+        return;
+    }
+    let src = pixels.to_vec();
+    let stride = (w as usize) * 4;
+    let clamped_strength = strength.clamp(0.0, 1.0);
+    for y in 1..(h as usize - 1) {
+        let row = y * stride;
+        for x in 1..(w as usize - 1) {
+            let c = row + x * 4;
+            let a = f32::from(src[c + 3]);
+            if a <= 0.0 {
+                continue;
+            }
+            let n_idx = c - stride;
+            let s_idx = c + stride;
+            let w_idx = c - 4;
+            let e_idx = c + 4;
+            for ch in 0..3 {
+                let center = f32::from(src[c + ch]);
+                let n = f32::from(src[n_idx + ch]);
+                let s = f32::from(src[s_idx + ch]);
+                let w_val = f32::from(src[w_idx + ch]);
+                let e_val = f32::from(src[e_idx + ch]);
+
+                let min_v = center.min(n).min(s).min(w_val).min(e_val);
+                let max_v = center.max(n).max(s).max(w_val).max(e_val);
+                let soft_min = min_v.min(255.0 - max_v).max(0.0);
+                let amp = (soft_min / max_v.max(1.0)).clamp(0.0, 1.0).sqrt();
+                let w_lobe = -0.18 * clamped_strength * amp;
+                let denom = (1.0 + 4.0 * w_lobe).max(0.20);
+                let out = (center + w_lobe * (n + s + e_val + w_val)) / denom;
+                pixels[c + ch] = out.round().clamp(0.0, a) as u8;
+            }
+        }
+    }
+}
+
 unsafe fn wic_source_to_pbgra(
     wic: &IWICImagingFactory,
     src: &IWICBitmapSource,
     max_dim: u32,
 ) -> Option<DecodedIconPixels> {
+    let mut orig_w = 0u32;
+    let mut orig_h = 0u32;
+    src.GetSize(&mut orig_w, &mut orig_h).ok()?;
+    if orig_w == 0 || orig_h == 0 || orig_w > 16384 || orig_h > 16384 {
+        return None;
+    }
+
+    // Use hardware/SIMD WIC Fant scaler for downscaling, and HighQualityCubic + CAS for
+    // crisp carousel upscaling of smaller Steam/Wallhaven thumbnails.
+    let effective_max = max_dim.clamp(16, 2048);
+    let mut cas_strength = 0.0f32;
+    let scaled_src: IWICBitmapSource = if orig_w > effective_max || orig_h > effective_max {
+        let scale = f64::from(effective_max) / f64::from(orig_w.max(orig_h));
+        let nw = ((f64::from(orig_w) * scale).round() as u32).clamp(1, effective_max);
+        let nh = ((f64::from(orig_h) * scale).round() as u32).clamp(1, effective_max);
+        let scaler: IWICBitmapScaler = wic.CreateBitmapScaler().ok()?;
+        scaler
+            .Initialize(src, nw, nh, WICBitmapInterpolationModeFant)
+            .ok()?;
+        scaler.into()
+    } else if effective_max >= 512 && orig_w >= 64 && orig_h >= 64 && orig_w.max(orig_h) < 768 {
+        let orig_max = orig_w.max(orig_h);
+        let target_max = (orig_max * 2).min(768);
+        let scale = f64::from(target_max) / f64::from(orig_max);
+        let nw = ((f64::from(orig_w) * scale).round() as u32).clamp(1, 768);
+        let nh = ((f64::from(orig_h) * scale).round() as u32).clamp(1, 768);
+        cas_strength = if orig_max <= 300 { 0.85 } else { 0.50 };
+        let scaler: IWICBitmapScaler = wic.CreateBitmapScaler().ok()?;
+        scaler
+            .Initialize(src, nw, nh, WICBitmapInterpolationModeHighQualityCubic)
+            .ok()?;
+        scaler.into()
+    } else {
+        src.clone()
+    };
+
     let conv: IWICFormatConverter = wic.CreateFormatConverter().ok()?;
     conv.Initialize(
-        src,
+        &scaled_src,
         &GUID_WICPixelFormat32bppPBGRA,
         WICBitmapDitherTypeNone,
         None,
@@ -683,8 +767,11 @@ unsafe fn wic_source_to_pbgra(
     conv_src
         .CopyPixels(std::ptr::null(), stride, &mut pixels)
         .ok()?;
-    let dec = normalize_icon_pixels(DecodedIconPixels { w, h, pixels });
-    Some(downscale_pbgra_box(dec, max_dim))
+    let mut dec = normalize_icon_pixels(DecodedIconPixels { w, h, pixels });
+    if cas_strength > 0.0 {
+        sharpen_pbgra_cas(&mut dec.pixels, dec.w, dec.h, cas_strength);
+    }
+    Some(downscale_pbgra_box(dec, effective_max))
 }
 
 unsafe fn create_d2d_bitmap_from_pbgra(
@@ -741,10 +828,17 @@ fn fnv1a64(s: &str) -> u64 {
 }
 
 fn icon_disk_cache_path(spec: &str, bucket_px: u32) -> Option<PathBuf> {
-    if spec.starts_with("hwnd:") || bucket_px > 512 {
+    if spec.starts_with("hwnd:") || bucket_px > 1024 {
         return None;
     }
     let dir = icon_cache_dir()?;
+    if bucket_px >= 512 {
+        let src_len = std::fs::metadata(spec).map(|m| m.len()).unwrap_or(0);
+        return Some(dir.join(format!(
+            "{:016x}_{bucket_px}_hd3_{src_len:x}.bgra",
+            fnv1a64(spec)
+        )));
+    }
     Some(dir.join(format!("{:016x}_{bucket_px}.bgra", fnv1a64(spec))))
 }
 
@@ -755,7 +849,7 @@ unsafe fn load_disk_cached_bitmap(rt: &ID2D1RenderTarget, path: &Path) -> Option
     }
     let w = u32::from_le_bytes(bytes[0..4].try_into().ok()?);
     let h = u32::from_le_bytes(bytes[4..8].try_into().ok()?);
-    if !(1..=512).contains(&w) || !(1..=512).contains(&h) {
+    if !(1..=1024).contains(&w) || !(1..=1024).contains(&h) {
         return None;
     }
     let expected = 8usize + (w as usize) * (h as usize) * 4;
@@ -818,6 +912,52 @@ pub unsafe fn draw_bitmap_fitted_aligned(
         D2D1_BITMAP_INTERPOLATION_MODE_LINEAR,
         None,
     );
+}
+
+/// Draws `bmp` aspect-covered (center-cropped like CSS `object-fit: cover`) inside `rect`.
+///
+/// # Safety
+/// `rt` must be inside an active `BeginDraw`..`EndDraw` pass and `bmp` must belong to `rt`.
+pub unsafe fn draw_bitmap_cover_aligned(
+    rt: &ID2D1RenderTarget,
+    bmp: &ID2D1Bitmap,
+    rect: Rect,
+    xalign: f32,
+    yalign: f32,
+) {
+    if rect.w <= 1.0 || rect.h <= 1.0 {
+        return;
+    }
+    let sz = bmp.GetSize();
+    if sz.width <= 0.0 || sz.height <= 0.0 {
+        return;
+    }
+    let scale = (rect.w / sz.width).max(rect.h / sz.height);
+    let dw = (sz.width * scale).max(1.0);
+    let dh = (sz.height * scale).max(1.0);
+    let x = rect.x + (rect.w - dw) * xalign.clamp(0.0, 1.0);
+    let y = rect.y + (rect.h - dh) * yalign.clamp(0.0, 1.0);
+    let clip = D2D_RECT_F {
+        left: rect.x,
+        top: rect.y,
+        right: rect.x + rect.w,
+        bottom: rect.y + rect.h,
+    };
+    let dst = D2D_RECT_F {
+        left: x,
+        top: y,
+        right: x + dw,
+        bottom: y + dh,
+    };
+    rt.PushAxisAlignedClip(&clip, D2D1_ANTIALIAS_MODE_PER_PRIMITIVE);
+    rt.DrawBitmap(
+        bmp,
+        Some(&dst),
+        1.0,
+        D2D1_BITMAP_INTERPOLATION_MODE_LINEAR,
+        None,
+    );
+    rt.PopAxisAlignedClip();
 }
 
 /// Draws `bmp` centered and aspect-fitted inside `rect` using linear interpolation.
@@ -929,7 +1069,11 @@ fn bucket_icon_size(px: u32) -> u32 {
         33..=48 => 48,
         49..=64 => 64,
         65..=96 => 96,
-        _ => 128,
+        97..=160 => 128,
+        161..=300 => 256,
+        301..=512 => 512,
+        513..=1024 => 1024,
+        _ => 2048,
     }
 }
 
@@ -980,5 +1124,38 @@ unsafe fn query_window_exe_path(hwnd: HWND) -> Option<String> {
         Some(String::from_utf16_lossy(&buf[..len as usize]))
     } else {
         None
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::sharpen_pbgra_cas;
+
+    #[test]
+    fn sharpen_pbgra_cas_preserves_premultiplied_alpha_and_enhances_edge() {
+        // 5x5 image with a vertical step edge (left=40, right=180, premultiplied alpha=200)
+        let (w, h) = (5u32, 5u32);
+        let mut pixels = vec![0u8; (w * h * 4) as usize];
+        for y in 0..h {
+            for x in 0..w {
+                let idx = ((y * w + x) * 4) as usize;
+                let v = if x < 2 { 40u8 } else { 180u8 };
+                pixels[idx] = v;
+                pixels[idx + 1] = v;
+                pixels[idx + 2] = v;
+                pixels[idx + 3] = 200u8;
+            }
+        }
+        sharpen_pbgra_cas(&mut pixels, w, h, 0.65);
+
+        let left_edge = ((2 * w + 1) * 4) as usize;
+        let right_edge = ((2 * w + 2) * 4) as usize;
+        assert!(pixels[left_edge] <= 40);
+        assert!(pixels[right_edge] >= 180);
+        for chunk in pixels.chunks_exact(4) {
+            assert!(chunk[0] <= chunk[3]);
+            assert!(chunk[1] <= chunk[3]);
+            assert!(chunk[2] <= chunk[3]);
+        }
     }
 }

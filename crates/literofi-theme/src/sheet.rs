@@ -627,6 +627,16 @@ impl ThemeSheet {
                         cfg.hover_select = *b;
                     }
                 }
+                "me-select-entry" => {
+                    if let PropertyValue::String(s) = resolved {
+                        cfg.me_select_entry = s.clone();
+                    }
+                }
+                "me-accept-entry" => {
+                    if let PropertyValue::String(s) = resolved {
+                        cfg.me_accept_entry = s.clone();
+                    }
+                }
                 "auto-select" => {
                     if let PropertyValue::Boolean(b) = resolved {
                         cfg.auto_select = *b;
@@ -753,6 +763,27 @@ impl ThemeSheet {
                         }
                     }
                 }
+                "daemon-hotkeys" => match resolved {
+                    PropertyValue::String(s) => {
+                        cfg.daemon_hotkeys = s
+                            .split([',', ';'])
+                            .map(|p| p.trim().to_string())
+                            .filter(|p| !p.is_empty())
+                            .collect();
+                    }
+                    PropertyValue::List(items) => {
+                        cfg.daemon_hotkeys = items
+                            .iter()
+                            .filter_map(|v| match v {
+                                PropertyValue::String(s) if !s.trim().is_empty() => {
+                                    Some(s.trim().to_string())
+                                }
+                                _ => None,
+                            })
+                            .collect();
+                    }
+                    _ => {}
+                },
                 "daemon-mode" => {
                     if !cfg.daemon_mode_set {
                         if let PropertyValue::String(s) = resolved {

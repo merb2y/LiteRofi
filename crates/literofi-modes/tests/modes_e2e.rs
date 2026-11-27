@@ -397,6 +397,7 @@ $N = [char]0
 $U = [char]0x1F
 if ($retv -eq "0") {
     Emit "${N}prompt${U}ScriptTest`n"
+    Emit "${N}markup-rows${U}true`n"
     Emit "${N}message${U}InitMsg`n"
     Emit "${N}data${U}state42`n"
     Emit "${N}use-hot-keys${U}true`n"
@@ -405,6 +406,8 @@ if ($retv -eq "0") {
     Emit "ItemOne${N}info${U}payload1`n"
     Emit "ItemTwo${N}info${U}payload2`n"
 } elseif ($retv -eq "1") {
+    Emit "${N}message${U}`n"
+    Emit "${N}markup-rows${U}false`n"
     Emit "${N}keep-selection${U}true`n"
     Emit "${N}keep-filter${U}true`n"
     Emit "Stage2:$arg0|$($env:ROFI_INFO)|$($env:ROFI_DATA)|$($env:ROFI_INPUT)`n"
@@ -429,6 +432,7 @@ if ($retv -eq "0") {
     let mut script = ScriptMode::new("myscript".to_string(), cmd_spec, &cfg);
     script.init().expect("ROFI_RETV=0 init");
 
+    assert_eq!(script.markup_rows_override(), Some(true));
     assert_eq!(script.prompt_override().as_deref(), Some("ScriptTest"));
     assert_eq!(script.message().as_deref(), Some("InitMsg"));
     let e0 = script.entries();
@@ -449,6 +453,8 @@ if ($retv -eq "0") {
         )
         .expect("ROFI_RETV=1");
     assert_eq!(s1, ModeStep::Reload);
+    assert_eq!(script.message().as_deref(), Some(""));
+    assert_eq!(script.markup_rows_override(), Some(false));
     assert!(script.reload_hints().keep_selection);
     assert!(script.reload_hints().keep_filter);
     assert_eq!(

@@ -267,7 +267,8 @@ def apply_theme(theme_name: str) -> None:
             '}\n'
         )
 
-    directive = f'@theme "{theme_name}"'
+    selected = f"themes/{theme_name}.rasi" if theme_name.casefold() == CONFIG_RASI.stem.casefold() else theme_name
+    directive = f'@theme "{selected}"'
     replaced = False
     out_lines: list[str] = []
     for line in existing.splitlines():

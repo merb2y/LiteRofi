@@ -7,20 +7,37 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%237aa2f7'/%3E%3Cstop offset='55%25' stop-color='%239d7cd8'/%3E%3Cstop offset='100%25' stop-color='%23f7768e'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='%23111522'/%3E%3Crect x='3' y='3' width='58' height='58' rx='14' fill='none' stroke='url(%23g)' stroke-width='3'/%3E%3Crect x='13' y='15' width='38' height='10' rx='5' fill='url(%23g)'/%3E%3Crect x='13' y='30' width='22' height='6' rx='3' fill='%23cdd6f4' opacity='0.9'/%3E%3Crect x='13' y='40' width='16' height='6' rx='3' fill='%238b96b5' opacity='0.7'/%3E%3Ccircle cx='44' cy='40' r='8' fill='%231b2135' stroke='url(%23g)' stroke-width='2.5'/%3E%3Ccircle cx='41' cy='38' r='2' fill='%237aa2f7'/%3E%3Ccircle cx='47' cy='38' r='2' fill='%23f7768e'/%3E%3Ccircle cx='44' cy='43' r='2' fill='%239ece6a'/%3E%3C/svg%3E" />
 <style>
   :root {
+    color-scheme: dark;
     --bg: #090b10;
     --bg-elev: #0f121a;
     --surface: #141926;
     --surface-2: #1a2133;
+    --bg-card: var(--surface);
     --border: rgba(255, 255, 255, 0.08);
     --border-strong: rgba(255, 255, 255, 0.14);
     --text: #eef2ff;
+    --fg: var(--text);
     --muted: #8b96b5;
+    --fg-dim: var(--muted);
     --accent: #7aa2f7;
     --accent-2: #bb9af7;
     --accent-glow: rgba(122, 162, 247, 0.25);
     --green: #9ece6a;
     --gold: #e0af68;
     --radius: 14px;
+  }
+
+  select {
+    color-scheme: inherit;
+  }
+  select option {
+    background-color: var(--surface);
+    color: var(--text);
+  }
+  select optgroup {
+    background-color: var(--bg-elev);
+    color: var(--muted);
+    font-weight: 700;
   }
 
   * { box-sizing: border-box; }
@@ -42,7 +59,7 @@
   }
 
   aside {
-    background: linear-gradient(180deg, #0f131d 0%, #0b0e15 100%);
+    background: var(--bg-elev);
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
@@ -191,7 +208,7 @@
     gap: 8px;
     padding: 14px 22px;
     border-bottom: 1px solid var(--border);
-    background: rgba(15, 18, 26, 0.72);
+    background: var(--bg-elev);
     backdrop-filter: blur(14px);
     flex-wrap: wrap;
   }
@@ -277,7 +294,7 @@
   }
 
   .theme-card {
-    background: linear-gradient(180deg, rgba(26, 33, 51, 0.82), rgba(18, 22, 34, 0.92));
+    background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
@@ -404,7 +421,7 @@
 
   .palette-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(235px, 1fr)); gap: 12px; }
   .palette-card {
-    background: linear-gradient(180deg, rgba(26, 33, 51, 0.75), rgba(18, 22, 34, 0.9));
+    background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 11px;
@@ -437,7 +454,7 @@
   .modal {
     width: 100%;
     max-width: 540px;
-    background: #121622;
+    background: var(--bg-elev);
     border: 1px solid var(--border-strong);
     border-radius: 16px;
     box-shadow: 0 24px 64px rgba(0, 0, 0, 0.65);
@@ -506,7 +523,7 @@
     position: fixed;
     right: 22px;
     bottom: 22px;
-    background: #171e2f;
+    background: var(--surface-2);
     border: 1px solid var(--accent);
     color: var(--text);
     padding: 11px 16px;
@@ -521,6 +538,108 @@
     z-index: 1100;
   }
   .toast.show { opacity: 1; transform: translateY(0); }
+  /* Widgets & Plugins Customizer Tab */
+  .widgets-head {
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 14px 16px; margin-bottom: 16px;
+    background: var(--bg-panel); border: 1px solid var(--border); border-radius: 14px;
+  }
+  .widgets-path { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--fg-dim); }
+  .widgets-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .widgets-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 16px;
+  }
+  .widget-card {
+    background: var(--bg-panel); border: 1px solid var(--border); border-radius: 14px;
+    padding: 16px; display: flex; flex-direction: column; gap: 12px;
+  }
+  .widget-card-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding-bottom: 10px; border-bottom: 1px solid var(--border);
+  }
+  .widget-title { font-size: 15px; font-weight: 700; }
+  .widget-key {
+    font-size: 11px; padding: 3px 8px; border-radius: 6px;
+    background: var(--bg-card); color: var(--fg-dim); border: 1px solid var(--border);
+  }
+  .w-row {
+    display: grid; grid-template-columns: 120px 1fr; align-items: center; gap: 10px;
+  }
+  .w-row label { font-size: 12px; color: var(--fg-dim); }
+  .w-row select, .w-row input[type="text"], .w-row input[type="number"] {
+    width: 100%; background: var(--bg-card); color: var(--fg);
+    border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; font-size: 12.5px;
+    outline: none;
+  }
+  .w-row select:focus, .w-row input:focus { border-color: var(--accent); }
+  .w-font-wrap {
+    display: flex; gap: 6px; align-items: center; width: 100%;
+  }
+  .w-font-wrap select.w-font-select { flex: 1; min-width: 0; }
+  .w-font-wrap select.w-font-size { width: 66px; flex: 0 0 66px; padding: 7px 6px; }
+  .w-font-custom { margin-top: 6px; }
+  .w-colors {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px;
+  }
+  .w-color-item {
+    display: flex; flex-direction: column; gap: 4px;
+    background: var(--bg-card); border: 1px solid var(--border); border-radius: 9px; padding: 7px 8px;
+  }
+  .w-color-item.disabled { opacity: 0.45; pointer-events: none; }
+  .w-color-item span { font-size: 11px; color: var(--fg-dim); }
+  .w-color-pick { display: flex; align-items: center; gap: 6px; }
+  .w-color-pick input[type="color"] {
+    width: 24px; height: 24px; border: none; background: transparent; cursor: pointer; padding: 0;
+  }
+  .w-color-pick code { font-size: 11px; color: var(--fg); }
+  .card-foot {
+    display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  }
+  .card-foot-right {
+    display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+  }
+  .reveal-btn {
+    background: var(--bg-card); color: var(--fg-dim); border: 1px solid var(--border);
+    border-radius: 6px; padding: 2px 6px; font-size: 11px; cursor: pointer;
+    line-height: 1.3; transition: all 0.14s ease;
+  }
+  .reveal-btn:hover {
+    color: var(--fg); border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 14%, var(--bg-card));
+  }
+  .widget-foot {
+    display: flex; justify-content: flex-end; gap: 8px; margin-top: auto; padding-top: 6px;
+  }
+  .wh-section {
+    display: flex; flex-direction: column; gap: 10px;
+    padding-top: 10px; border-top: 1px solid var(--border);
+  }
+  .wh-section-title {
+    font-size: 11.5px; font-weight: 700; color: var(--fg-dim);
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .wh-cat-pills {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .wh-pill {
+    padding: 5px 10px; border-radius: 7px; font-size: 12px; cursor: pointer;
+    background: var(--bg-card); color: var(--fg-dim); border: 1px solid var(--border);
+    transition: all 0.14s ease;
+  }
+  .wh-pill.active {
+    background: color-mix(in srgb, var(--accent) 18%, var(--bg-card));
+    color: var(--fg); border-color: var(--accent); font-weight: 600;
+  }
+  .raw-toml-box {
+    margin-bottom: 16px; background: var(--bg-panel); border: 1px solid var(--border);
+    border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 10px;
+  }
+  .raw-toml-box textarea {
+    width: 100%; min-height: 220px; resize: vertical;
+    background: var(--bg-card); color: var(--fg); border: 1px solid var(--border);
+    border-radius: 10px; padding: 12px; font-family: ui-monospace, Consolas, monospace; font-size: 12px;
+  }
 </style>
 </head>
 <body>
@@ -565,6 +684,10 @@
         <span data-i18n="palettesTab">Color Palettes</span>
         <span class="nav-count" id="navPaletteCount">0</span>
       </button>
+      <button class="nav-item" data-tab="widgets">
+        <span data-i18n="widgetsTab">Widgets &amp; Plugins</span>
+        <span class="nav-count">6</span>
+      </button>
     </div>
 
     <div class="nav-section-title" id="catSectionTitle" data-i18n="categoriesSection">Categories</div>
@@ -593,6 +716,7 @@
         </select>
         <button class="tool-btn" id="densityBtn"></button>
         <button class="tool-btn accent-ghost" id="prerenderBtn" data-i18n="generatePreviews">Generate Previews</button>
+        <button class="tool-btn" id="openThemesDirBtn" data-i18n="openThemesFolder">.rasi Folder</button>
         <button class="tool-btn" id="refreshCacheBtn" data-i18n="refresh">Refresh</button>
         <button class="tool-btn" id="langBtn" title="Switch Language (EN / TR)">EN</button>
       </div>
@@ -620,6 +744,7 @@
         <input id="fileInput" type="file" accept=".rasi,.rasinc,.css,.txt" multiple hidden />
       </div>
 
+      <button type="button" class="import-cta" id="folderImport" hidden data-i18n="folderImport">Import theme folder</button>
       <div class="divider" data-i18n="orPaste">or paste .rasi code directly</div>
 
       <div class="field">
@@ -646,10 +771,20 @@
 const I18N = {
   en: {
     subtitle: "Theme & Color Gallery",
+    folderImport: "Import theme folder",
     addThemeBtn: "＋ Add Theme (.rasi)",
     viewSection: "View",
     themesTab: "Themes",
     palettesTab: "Color Palettes",
+    widgetsTab: "Widgets & Plugins",
+    showingWidgets: "Customize fonts, colors & theme mode for extra widgets — or edit widgets.toml directly",
+    widgetsSaved: "Widget settings saved to widgets.toml",
+    widgetsReset: "Widget settings reset to defaults",
+    widgetsOpened: "Opened widgets.toml in your default editor",
+    openConfigFile: "Open widgets.toml",
+    editRawToml: "Raw TOML",
+    saveAllWidgets: "Save All",
+    resetWidgets: "Reset Defaults",
     categoriesSection: "Categories",
     activeTheme: "Active Theme",
     activePalette: "Active Palette",
@@ -663,6 +798,10 @@ const I18N = {
     compact: "Compact",
     cozy: "Cozy",
     generatePreviews: "Generate Previews",
+    openThemesFolder: ".rasi Folder",
+    toastThemesDirOpened: "Opened .rasi themes folder",
+    revealRasiTitle: "Reveal .rasi file in Explorer",
+    toastRasiRevealed: (n) => `Revealed ${n}.rasi in Explorer`,
     refresh: "Refresh",
     dropTip: "Tip: Drag & drop any .rasi file onto this window to import",
     modalTitle: "Add Theme to LiteRofi",
@@ -703,6 +842,15 @@ const I18N = {
     viewSection: "Görünüm",
     themesTab: "Temalar",
     palettesTab: "Renk Paletleri",
+    widgetsTab: "Eklentiler & Widget'lar",
+    showingWidgets: "Ekstra eklentilerin font, renk ve tema modunu buradan ya da doğrudan widgets.toml dosyasından özelleştir",
+    widgetsSaved: "Widget ayarları widgets.toml dosyasına kaydedildi",
+    widgetsReset: "Widget ayarları varsayılana sıfırlandı",
+    widgetsOpened: "widgets.toml varsayılan düzenleyicide açıldı",
+    openConfigFile: "widgets.toml Aç",
+    editRawToml: "Ham TOML",
+    saveAllWidgets: "Tümünü Kaydet",
+    resetWidgets: "Varsayılana Sıfırla",
     categoriesSection: "Kategoriler",
     activeTheme: "Aktif Tema",
     activePalette: "Aktif Palet",
@@ -716,7 +864,12 @@ const I18N = {
     compact: "Kompakt",
     cozy: "Rahat",
     generatePreviews: "Önizlemeleri Üret",
+    openThemesFolder: ".rasi Klasörünü Aç",
+    toastThemesDirOpened: ".rasi tema klasörü açıldı",
+    revealRasiTitle: ".rasi dosyasını klasörde göster",
+    toastRasiRevealed: (n) => `${n}.rasi klasörde gösterildi`,
     refresh: "Yenile",
+    folderImport: "Tema klasörü aktar",
     dropTip: "İpucu: Herhangi bir .rasi dosyasını pencereye sürükleyip bırakabilirsin",
     modalTitle: "LiteRofi'ye Tema Ekle",
     dropzoneTitle: ".rasi dosyası seç veya buraya sürükle",
@@ -763,6 +916,8 @@ const state = {
   activePalette: "",
   themes: [],
   palettes: [],
+  widgetsConfig: null,
+  showRawToml: false,
   cacheBust: Date.now(),
 };
 
@@ -811,10 +966,74 @@ async function api(url, opts) {
   return data;
 }
 
+function hexToRgb(hex) {
+  const h = (hex || "").replace("#", "");
+  if (h.length !== 6) return null;
+  return [parseInt(h.slice(0, 2), 16), parseInt(h.slice(2, 4), 16), parseInt(h.slice(4, 6), 16)];
+}
+function mixHex(a, b, t) {
+  const ra = hexToRgb(a), rb = hexToRgb(b);
+  if (!ra || !rb) return a;
+  const m = (i) => Math.round(ra[i] + (rb[i] - ra[i]) * t);
+  return "#" + [m(0), m(1), m(2)].map(v => v.toString(16).padStart(2, "0")).join("");
+}
+function relLuminance(rgb) {
+  const lin = rgb.map(v => {
+    const s = v / 255;
+    return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2];
+}
+function contrastRatio(hexA, hexB) {
+  const a = hexToRgb(hexA), b = hexToRgb(hexB);
+  if (!a || !b) return 1;
+  const la = relLuminance(a), lb = relLuminance(b);
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+function ensureReadableText(fgHex, bgHex, isLight) {
+  if (fgHex && contrastRatio(fgHex, bgHex) >= 4.5) return fgHex;
+  return isLight ? "#14171f" : "#eef2ff";
+}
+function applyStudioTheme(c) {
+  if (!c || !c.bg) return;
+  const rgb = hexToRgb(c.bg);
+  if (!rgb) return;
+  const isLight = relLuminance(rgb) > 0.32;
+  const bgElev = mixHex(c.bg, isLight ? "#000000" : "#ffffff", 0.04);
+  const surface = (c.bgAlt && contrastRatio(c.bgAlt, c.bg) > 1.05 && contrastRatio(c.bgAlt, c.bg) < 2.2)
+    ? c.bgAlt
+    : mixHex(c.bg, isLight ? "#000000" : "#ffffff", isLight ? 0.07 : 0.08);
+  const surface2 = mixHex(surface, isLight ? "#000000" : "#ffffff", 0.07);
+  const safeText = ensureReadableText(c.fg, surface, isLight);
+  const safeMuted = mixHex(safeText, surface, 0.34);
+  const accent = (c.accent && contrastRatio(c.accent, surface) >= 2.4)
+    ? c.accent
+    : (isLight ? "#3b5bdb" : "#7aa2f7");
+  const root = document.documentElement.style;
+  root.setProperty("color-scheme", isLight ? "light" : "dark");
+  root.setProperty("--bg", c.bg);
+  root.setProperty("--bg-elev", bgElev);
+  root.setProperty("--surface", surface);
+  root.setProperty("--surface-2", surface2);
+  root.setProperty("--text", safeText);
+  root.setProperty("--muted", safeMuted);
+  root.setProperty("--accent", accent);
+  root.setProperty("--accent-2", c.urgent || accent);
+  const accRgb = hexToRgb(accent) || [122, 162, 247];
+  root.setProperty("--accent-glow", `rgba(${accRgb[0]}, ${accRgb[1]}, ${accRgb[2]}, 0.28)`);
+  root.setProperty("--border", isLight ? "rgba(0, 0, 0, 0.14)" : "rgba(255, 255, 255, 0.10)");
+  root.setProperty("--border-strong", isLight ? "rgba(0, 0, 0, 0.26)" : "rgba(255, 255, 255, 0.18)");
+}
+
 async function loadState() {
   const data = await api("/api/state");
+  document.getElementById("folderImport").style.display = data.folderImport ? "" : "none";
+  document.getElementById("folderImport").hidden = !data.folderImport;
   state.activeTheme = data.activeTheme || "";
   state.activePalette = data.activePalette || "";
+  if (data.activeThemeColors) {
+    applyStudioTheme(data.activeThemeColors);
+  }
   state.themes = (data.themes || []).map(x => ({
     ...x,
     category: x.category === "Klasik" ? "Classic" : x.category,
@@ -957,7 +1176,10 @@ function renderMain() {
         </div>
         <div class="card-foot">
           <span class="card-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
-          <span class="card-cat">${escapeHtml(catLabel(item.category))}</span>
+          <div class="card-foot-right">
+            <span class="card-cat">${escapeHtml(catLabel(item.category))}</span>
+            <button class="reveal-btn" title="${escapeHtml(t("revealRasiTitle"))}">.rasi</button>
+          </div>
         </div>
       `;
 
@@ -966,6 +1188,20 @@ function renderMain() {
       thumb.addEventListener("click", (e) => {
         if (e.target.closest("button")) return;
         doLivePreview(item.name);
+      });
+
+      card.querySelector(".reveal-btn").addEventListener("click", async (e) => {
+        e.stopPropagation();
+        try {
+          await api("/api/reveal-theme", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: item.name }),
+          });
+          showToast(t("toastRasiRevealed")(item.name));
+        } catch (err) {
+          showToast(t("errPrefix") + err.message);
+        }
       });
 
       card.querySelector(".fav-btn").addEventListener("click", async (e) => {
@@ -997,6 +1233,9 @@ function renderMain() {
     }
     container.innerHTML = "";
     container.appendChild(grid);
+  } else if (state.tab === "widgets") {
+    subbar.textContent = t("showingWidgets");
+    renderWidgetsTab(container);
   } else {
     const items = filteredPalettes();
     subbar.textContent = t("showingPalettes")(items.length, state.palettes.length);
@@ -1028,6 +1267,634 @@ function renderMain() {
   }
 }
 
+async function loadWidgetsConfig() {
+  try {
+    state.widgetsConfig = await api("/api/widgets-config");
+  } catch (err) {
+    showToast(t("errPrefix") + err.message);
+  }
+}
+
+function serializeWidgetsToToml(cfg) {
+  return [
+    "# LiteRofi Extra Widgets & Plugins Configuration",
+    "# Edit manually here OR customize visually from LiteRofi Theme Studio -> Widgets",
+    "",
+    "[games]",
+    `theme_mode = "${cfg.games.theme_mode}"`,
+    `font = "${cfg.games.font}"`,
+    `ground = "${cfg.games.ground}"`,
+    `surface = "${cfg.games.surface}"`,
+    `ink = "${cfg.games.ink}"`,
+    `accent = "${cfg.games.accent}"`,
+    `accent_ink = "${cfg.games.accent_ink}"`,
+    `radius = ${cfg.games.radius}`,
+    "",
+    "[music]",
+    `theme_mode = "${cfg.music.theme_mode}"`,
+    `font = "${cfg.music.font}"`,
+    `bg = "${cfg.music.bg}"`,
+    `bg_alt = "${cfg.music.bg_alt}"`,
+    `accent = "${cfg.music.accent}"`,
+    "",
+    "[wallpaper]",
+    `theme_mode = "${cfg.wallpaper.theme_mode}"`,
+    `accent = "${cfg.wallpaper.accent}"`,
+    `wallhaven_query = "${(cfg.wallpaper.wallhaven_query || "").replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`,
+    `wallhaven_categories = "${cfg.wallpaper.wallhaven_categories || "111"}"`,
+    `wallhaven_sorting = "${cfg.wallpaper.wallhaven_sorting || "random"}"`,
+    `wallhaven_top_range = "${cfg.wallpaper.wallhaven_top_range || "1M"}"`,
+    `wallhaven_atleast = "${cfg.wallpaper.wallhaven_atleast ?? "1920x1080"}"`,
+    `wallhaven_ratios = "${cfg.wallpaper.wallhaven_ratios || ""}"`,
+    `wallhaven_color = "${cfg.wallpaper.wallhaven_color || ""}"`,
+    `we_query = "${(cfg.wallpaper.we_query || "").replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`,
+    `we_genre = "${cfg.wallpaper.we_genre || ""}"`,
+    `we_type = "${cfg.wallpaper.we_type || ""}"`,
+    `we_sort = "${cfg.wallpaper.we_sort || "toprated"}"`,
+    `we_exclude_anime = ${cfg.wallpaper.we_exclude_anime !== false ? "true" : "false"}`,
+    `we_mute_audio = ${cfg.wallpaper.we_mute_audio !== false ? "true" : "false"}`,
+    "",
+    "[clipboard]",
+    `theme_mode = "${cfg.clipboard.theme_mode}"`,
+    `font = "${cfg.clipboard.font}"`,
+    `bg = "${cfg.clipboard.bg}"`,
+    `bg_alt = "${cfg.clipboard.bg_alt}"`,
+    `fg = "${cfg.clipboard.fg}"`,
+    `accent = "${cfg.clipboard.accent}"`,
+    "",
+    "[control]",
+    `theme_mode = "${cfg.control.theme_mode}"`,
+    `font = "${cfg.control.font}"`,
+    `bg = "${cfg.control.bg}"`,
+    `bg_alt = "${cfg.control.bg_alt}"`,
+    `fg = "${cfg.control.fg}"`,
+    `accent = "${cfg.control.accent}"`,
+    "",
+    "[power]",
+    `theme_mode = "${cfg.power.theme_mode}"`,
+    `font = "${cfg.power.font}"`,
+    `bg = "${cfg.power.bg}"`,
+    `bg_alt = "${cfg.power.bg_alt}"`,
+    `fg = "${cfg.power.fg}"`,
+    `accent = "${cfg.power.accent}"`,
+    "",
+  ].join("\n");
+}
+
+async function saveWidgetsConfig(rawTomlOverride = null) {
+  try {
+    const toml = rawTomlOverride !== null ? rawTomlOverride : serializeWidgetsToToml(state.widgetsConfig);
+    state.widgetsConfig = await api("/api/widgets-config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ toml }),
+    });
+    showToast(t("widgetsSaved"));
+    if (state.tab === "widgets") renderMain();
+  } catch (err) {
+    showToast(t("errPrefix") + err.message);
+  }
+}
+
+async function previewWidgetMode(mode) {
+  try {
+    await saveWidgetsConfig();
+    await api("/api/preview-widget", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode }),
+    });
+    showToast(t("toastLiveOpened")(mode));
+  } catch (err) {
+    showToast(t("errPrefix") + err.message);
+  }
+}
+
+const RICING_MONO_FONTS = [
+  "Fira Code",
+  "FiraCode Nerd Font",
+  "FiraCode Nerd Font Mono",
+  "JetBrainsMono NF",
+  "JetBrains Mono",
+  "JetBrainsMono Nerd Font",
+  "Iosevka",
+  "Iosevka Slab",
+  "Iosevka Nerd Font",
+  "IosevkaTerm Nerd Font",
+  "Cascadia Code",
+  "Cascadia Mono",
+  "CaskaydiaCove Nerd Font",
+  "Hack",
+  "Hack Nerd Font",
+  "MesloLGS NF",
+  "Maple Mono",
+  "Maple Mono NF",
+  "Victor Mono",
+  "Geist Mono",
+  "Monaspace Neon",
+  "IBM Plex Mono",
+  "SauceCodePro Nerd Font",
+  "SpaceMono Nerd Font",
+  "UbuntuMono Nerd Font",
+  "CommitMono",
+  "SF Mono",
+  "Consolas",
+];
+
+const MODERN_UI_FONTS = [
+  "Inter",
+  "Segoe UI",
+  "Segoe UI Variable",
+  "Fira Sans",
+  "Geist",
+  "IBM Plex Sans",
+  "Plus Jakarta Sans",
+  "SF Pro Display",
+  "Poppins",
+  "Roboto",
+  "Noto Sans",
+  "Ubuntu",
+  "Cantarell",
+  "Outfit",
+];
+
+function splitRasiFont(val) {
+  const s = (val || "Segoe UI 11").trim();
+  const m = s.match(/^(.*)\s+(\d{1,2})$/);
+  if (m) return { family: m[1].trim(), size: m[2] };
+  return { family: s || "Segoe UI", size: "11" };
+}
+
+async function ensureInstalledFonts() {
+  if (state.installedFonts !== undefined) return;
+  state.installedFonts = [];
+  try {
+    const res = await api("/api/fonts");
+    if (Array.isArray(res.installed)) {
+      state.installedFonts = res.installed;
+      if (state.tab === "widgets") renderMain();
+    }
+  } catch {}
+}
+
+function buildFontOptionsHtml(currentFamily, isTr) {
+  const installed = state.installedFonts || [];
+  const installedLower = new Set(installed.map(f => f.toLowerCase()));
+  const seen = new Set();
+  const labelFor = (f) => installedLower.has(f.toLowerCase()) ? `${f} ✓` : f;
+
+  const monoOpts = RICING_MONO_FONTS.map(f => {
+    seen.add(f.toLowerCase());
+    return `<option value="${escapeHtml(f)}" ${currentFamily.toLowerCase() === f.toLowerCase() ? "selected" : ""}>${escapeHtml(labelFor(f))}</option>`;
+  }).join("");
+
+  const uiOpts = MODERN_UI_FONTS.map(f => {
+    seen.add(f.toLowerCase());
+    return `<option value="${escapeHtml(f)}" ${currentFamily.toLowerCase() === f.toLowerCase() ? "selected" : ""}>${escapeHtml(labelFor(f))}</option>`;
+  }).join("");
+
+  const extraInstalled = installed.filter(f => !seen.has(f.toLowerCase()));
+  const pcOpts = extraInstalled.map(f => {
+    seen.add(f.toLowerCase());
+    return `<option value="${escapeHtml(f)}" ${currentFamily.toLowerCase() === f.toLowerCase() ? "selected" : ""}>${escapeHtml(f)} ✓</option>`;
+  }).join("");
+
+  const isCustomVal = currentFamily && !seen.has(currentFamily.toLowerCase());
+  const customOpt = isCustomVal
+    ? `<option value="${escapeHtml(currentFamily)}" selected>${escapeHtml(currentFamily)}</option>`
+    : "";
+
+  return `
+    ${customOpt}
+    <optgroup label="${isTr ? "★ Linux Ricing & Nerd Fontlar" : "★ Linux Ricing & Nerd Fonts"}">
+      ${monoOpts}
+    </optgroup>
+    <optgroup label="${isTr ? "Modern Arayüz & Sans" : "Modern UI & Sans"}">
+      ${uiOpts}
+    </optgroup>
+    ${pcOpts ? `<optgroup label="${isTr ? "Bilgisayarda Kurulu (✓)" : "Installed on PC (✓)"}">${pcOpts}</optgroup>` : ""}
+    <option value="__custom__">${isTr ? "✎ Özel font adı yaz..." : "✎ Type custom font..."}</option>
+  `;
+}
+
+function renderWidgetsTab(container) {
+  if (!state.widgetsConfig) {
+    container.innerHTML = `<div class="widgets-head"><span>${t("loadingPreview")}</span></div>`;
+    loadWidgetsConfig().then(() => { if (state.tab === "widgets") renderMain(); });
+    return;
+  }
+  ensureInstalledFonts();
+  const cfg = state.widgetsConfig;
+  const isTr = state.lang === "tr";
+  const fontDatalist = "";
+
+  const specs = [
+    {
+      id: "games", title: isTr ? "Oyun Başlatıcı" : "Game Launcher", hotkey: "Alt+G",
+      modes: [["active", isTr ? "Aktif Temayı İzle" : "Follow Active Theme"], ["custom", isTr ? "Özel Renkler" : "Custom Colors"]],
+      hasFont: true, fontList: "widgetFontList", hasRadius: true,
+      colors: [
+        ["ground", isTr ? "Zemin" : "Ground"], ["surface", isTr ? "Yüzey" : "Surface"],
+        ["ink", isTr ? "Metin" : "Text"], ["accent", isTr ? "Vurgu" : "Accent"], ["accent_ink", isTr ? "Buton Yazısı" : "Button Text"],
+      ],
+    },
+    {
+      id: "music", title: isTr ? "Müzik Çalar" : "Music Player", hotkey: "Alt+M",
+      modes: [["auto", isTr ? "Kapak Resmine Göre" : "Auto Cover Art"], ["active", isTr ? "Aktif Temayı İzle" : "Follow Active Theme"], ["custom", isTr ? "Özel Renkler" : "Custom Colors"]],
+      hasFont: true, fontList: "widgetFontList", hasRadius: false,
+      colors: [
+        ["bg", isTr ? "Zemin" : "Background"], ["bg_alt", isTr ? "Kart / Bar" : "Surface"], ["accent", isTr ? "Vurgu" : "Accent"],
+      ],
+    },
+    {
+      id: "wallpaper", title: isTr ? "Duvar Kağıdı Vitrini" : "Wallpaper Carousel", hotkey: "Alt+W",
+      modes: [["active", isTr ? "Aktif Temayı İzle" : "Follow Active Theme"], ["custom", isTr ? "Özel Renk" : "Custom Accent"]],
+      hasFont: false, hasRadius: false,
+      colors: [["accent", isTr ? "Seçili Çerçeve" : "Accent Border"]],
+    },
+    {
+      id: "clipboard", title: isTr ? "Pano Yöneticisi" : "Clipboard Manager", hotkey: "Alt+V",
+      modes: [["active", isTr ? "Aktif Temayı İzle" : "Follow Active Theme"], ["custom", isTr ? "Özel Renkler" : "Custom Colors"]],
+      hasFont: true, fontList: "rasiFontList", hasRadius: false,
+      colors: [["bg", isTr ? "Zemin" : "Background"], ["bg_alt", isTr ? "Satır" : "Surface"], ["fg", isTr ? "Metin" : "Text"], ["accent", isTr ? "Vurgu" : "Accent"]],
+    },
+    {
+      id: "control", title: isTr ? "Kontrol Merkezi" : "Control Center", hotkey: "Alt+D",
+      modes: [["active", isTr ? "Aktif Temayı İzle" : "Follow Active Theme"], ["custom", isTr ? "Özel Renkler" : "Custom Colors"]],
+      hasFont: true, fontList: "rasiFontList", hasRadius: false,
+      colors: [["bg", isTr ? "Zemin" : "Background"], ["bg_alt", isTr ? "Satır" : "Surface"], ["fg", isTr ? "Metin" : "Text"], ["accent", isTr ? "Vurgu" : "Accent"]],
+    },
+    {
+      id: "power", title: isTr ? "Güç Menüsü" : "Power Menu", hotkey: "Alt+P",
+      modes: [["active", isTr ? "Aktif Temayı İzle" : "Follow Active Theme"], ["custom", isTr ? "Özel Renkler" : "Custom Colors"]],
+      hasFont: true, fontList: "rasiFontList", hasRadius: false,
+      colors: [["bg", isTr ? "Zemin" : "Background"], ["bg_alt", isTr ? "Kart" : "Surface"], ["fg", isTr ? "Metin" : "Text"], ["accent", isTr ? "Vurgu" : "Accent"]],
+    },
+  ];
+
+  const wrap = document.createElement("div");
+  wrap.innerHTML = `
+    ${fontDatalist}
+    <div class="widgets-head">
+      <div>
+        <div style="font-weight:700;font-size:14px;margin-bottom:3px">${t("widgetsTab")}</div>
+        <div class="widgets-path">${escapeHtml(cfg.configPath || "%APPDATA%\\LiteRofi\\widgets.toml")}</div>
+      </div>
+      <div class="widgets-actions">
+        <button class="tool-btn" id="openWidgetsTomlBtn">${t("openConfigFile")}</button>
+        <button class="tool-btn" id="toggleRawTomlBtn">${t("editRawToml")}</button>
+        <button class="tool-btn" id="resetWidgetsBtn">${t("resetWidgets")}</button>
+        <button class="tool-btn accent-ghost" id="saveAllWidgetsBtn">${t("saveAllWidgets")}</button>
+      </div>
+    </div>
+    ${state.showRawToml ? `
+      <div class="raw-toml-box">
+        <textarea id="rawTomlArea">${escapeHtml(cfg.toml || serializeWidgetsToToml(cfg))}</textarea>
+        <div style="display:flex;justify-content:flex-end;gap:8px">
+          <button class="tool-btn accent-ghost" id="saveRawTomlBtn">${t("saveAllWidgets")}</button>
+        </div>
+      </div>
+    ` : ""}
+    <div class="widgets-grid" id="widgetsGrid"></div>
+  `;
+
+  const grid = wrap.querySelector("#widgetsGrid");
+  for (const sp of specs) {
+    const sec = cfg[sp.id];
+    const isCustom = sec.theme_mode === "custom";
+    const card = document.createElement("div");
+    card.className = "widget-card";
+    card.innerHTML = `
+      <div class="widget-card-head">
+        <span class="widget-title">${escapeHtml(sp.title)}</span>
+        <span class="widget-key">${sp.hotkey}</span>
+      </div>
+      <div class="w-row">
+        <label>${isTr ? "Tema Modu" : "Theme Mode"}</label>
+        <select data-sec="${sp.id}" data-key="theme_mode">
+          ${sp.modes.map(([v, l]) => `<option value="${v}" ${sec.theme_mode === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}
+        </select>
+      </div>
+      ${sp.hasFont ? (() => {
+        const isRasi = sp.fontList === "rasiFontList";
+        const parsed = isRasi ? splitRasiFont(sec.font) : { family: (sec.font || "Segoe UI").trim(), size: "" };
+        const sizes = ["9", "10", "11", "12", "13", "14", "15", "16"];
+        return `
+          <div class="w-row">
+            <label>Font</label>
+            <div class="w-font-wrap">
+              <select class="w-font-select" data-sec="${sp.id}" data-rasi="${isRasi ? "1" : "0"}">
+                ${buildFontOptionsHtml(parsed.family, isTr)}
+              </select>
+              ${isRasi ? `
+                <select class="w-font-size" data-sec="${sp.id}" title="${isTr ? "Font Boyutu" : "Font Size"}">
+                  ${sizes.map(sz => `<option value="${sz}" ${parsed.size === sz ? "selected" : ""}>${sz}pt</option>`).join("")}
+                </select>
+              ` : ""}
+            </div>
+          </div>
+        `;
+      })() : ""}
+      ${sp.hasRadius ? `
+        <div class="w-row">
+          <label>${isTr ? "Köşe Yarıçapı" : "Corner Radius"}</label>
+          <input type="number" min="0" max="32" data-sec="${sp.id}" data-key="radius" value="${sec.radius ?? 18}" />
+        </div>
+      ` : ""}
+      <div class="w-colors">
+        ${sp.colors.map(([ck, cl]) => `
+          <div class="w-color-item ${isCustom ? "" : "disabled"}">
+            <span>${escapeHtml(cl)}</span>
+            <div class="w-color-pick">
+              <input type="color" data-sec="${sp.id}" data-key="${ck}" value="${escapeHtml(sec[ck] || "#181a24")}" />
+              <code>${escapeHtml(sec[ck] || "#181a24")}</code>
+            </div>
+          </div>
+        `).join("")}
+      </div>
+      ${sp.id === "wallpaper" ? (() => {
+        const cats = (sec.wallhaven_categories || "111").padEnd(3, "1");
+        const sort = sec.wallhaven_sorting || "random";
+        const topRange = sec.wallhaven_top_range || "1M";
+        const atleast = sec.wallhaven_atleast ?? "1920x1080";
+        const ratios = sec.wallhaven_ratios || "";
+        const color = sec.wallhaven_color || "";
+        const query = sec.wallhaven_query || "";
+        const sortOpts = [
+          ["random", isTr ? "Rastgele (Dinamik)" : "Random (Dynamic)"],
+          ["toplist", isTr ? "En İyi (Toplist)" : "Toplist"],
+          ["favorites", isTr ? "En Çok Favorilenen" : "Most Favorited"],
+          ["views", isTr ? "En Çok Görüntülenen" : "Most Viewed"],
+          ["date_added", isTr ? "En Yeni" : "Latest"],
+          ["hot", isTr ? "Popüler (Hot)" : "Hot"],
+        ];
+        const rangeOpts = [
+          ["1d", isTr ? "Son 1 Gün" : "Last Day"],
+          ["3d", isTr ? "Son 3 Gün" : "Last 3 Days"],
+          ["1w", isTr ? "Son 1 Hafta" : "Last Week"],
+          ["1M", isTr ? "Son 1 Ay" : "Last Month"],
+          ["3M", isTr ? "Son 3 Ay" : "Last 3 Months"],
+          ["6M", isTr ? "Son 6 Ay" : "Last 6 Months"],
+          ["1y", isTr ? "Son 1 Yıl" : "Last Year"],
+        ];
+        const resOpts = [
+          ["", isTr ? "Tümü" : "Any"],
+          ["1920x1080", "1080p Full HD (1920x1080+)"],
+          ["2560x1440", "2K QHD (2560x1440+)"],
+          ["3840x2160", "4K UHD (3840x2160+)"],
+          ["3440x1440", "Ultrawide (3440x1440+)"],
+        ];
+        const ratioOpts = [
+          ["", isTr ? "Tümü" : "Any"],
+          ["16x9", "16:9 (Standart)"],
+          ["16x10", "16:10"],
+          ["21x9", "21:9 (Ultrawide)"],
+          ["32x9", "32:9 (Superwide)"],
+          ["landscape", isTr ? "Yatay (Landscape)" : "Landscape"],
+          ["portrait", isTr ? "Dikey (Portrait)" : "Portrait"],
+        ];
+        const colorOpts = [
+          ["", isTr ? "Tümü" : "Any"],
+          ["000000", isTr ? "Siyah / Koyu" : "Black / Dark"],
+          ["424153", isTr ? "Kül / Koyu Gri" : "Slate / Dark Gray"],
+          ["660000", isTr ? "Kızıl / Bordo" : "Crimson"],
+          ["cc6633", isTr ? "Kehribar / Turuncu" : "Amber / Orange"],
+          ["336600", isTr ? "Orman Yeşili" : "Forest Green"],
+          ["0066cc", isTr ? "Gece Mavisi" : "Deep Blue"],
+          ["663399", isTr ? "Mor / Violet" : "Purple / Violet"],
+          ["009999", isTr ? "Turkuaz / Teal" : "Teal / Cyan"],
+        ];
+        return `
+          <div class="wh-section">
+            <div class="wh-section-title">
+              <span>${isTr ? "Wallhaven Filtreleri" : "Wallhaven Filters"}</span>
+              <span class="widget-key">Alt+W → W</span>
+            </div>
+            <div class="w-row">
+              <label>${isTr ? "Arama / Etiket" : "Search / Tag"}</label>
+              <input type="text" data-sec="wallpaper" data-key="wallhaven_query" placeholder="${isTr ? "ör. cyberpunk, minimal, nature..." : "e.g. cyberpunk, minimal, nature..."}" value="${escapeHtml(query)}" />
+            </div>
+            <div class="w-row">
+              <label>${isTr ? "Kategoriler" : "Categories"}</label>
+              <div class="wh-cat-pills">
+                <button type="button" class="wh-pill ${cats[0] === "1" ? "active" : ""}" data-wh-cat="0">${isTr ? "Genel" : "General"}</button>
+                <button type="button" class="wh-pill ${cats[1] === "1" ? "active" : ""}" data-wh-cat="1">Anime</button>
+                <button type="button" class="wh-pill ${cats[2] === "1" ? "active" : ""}" data-wh-cat="2">${isTr ? "İnsanlar" : "People"}</button>
+              </div>
+            </div>
+            <div class="w-row">
+              <label>${isTr ? "Sıralama" : "Sort By"}</label>
+              <select data-sec="wallpaper" data-key="wallhaven_sorting">
+                ${sortOpts.map(([v, l]) => `<option value="${v}" ${sort === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}
+              </select>
+            </div>
+            ${sort === "toplist" ? `
+              <div class="w-row">
+                <label>${isTr ? "Zaman Aralığı" : "Top Range"}</label>
+                <select data-sec="wallpaper" data-key="wallhaven_top_range">
+                  ${rangeOpts.map(([v, l]) => `<option value="${v}" ${topRange === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}
+                </select>
+              </div>
+            ` : ""}
+            <div class="w-row">
+              <label>${isTr ? "Min. Çözünürlük" : "Min Resolution"}</label>
+              <select data-sec="wallpaper" data-key="wallhaven_atleast">
+                ${resOpts.map(([v, l]) => `<option value="${v}" ${atleast === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}
+              </select>
+            </div>
+            <div class="w-row">
+              <label>${isTr ? "En-Boy Oranı" : "Aspect Ratio"}</label>
+              <select data-sec="wallpaper" data-key="wallhaven_ratios">
+                ${ratioOpts.map(([v, l]) => `<option value="${v}" ${ratios === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}
+              </select>
+            </div>
+            <div class="w-row">
+              <label>${isTr ? "Renk Tonu" : "Color Tone"}</label>
+              <select data-sec="wallpaper" data-key="wallhaven_color">
+                ${colorOpts.map(([v, l]) => `<option value="${v}" ${color === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}
+              </select>
+            </div>
+          </div>
+          <div class="wh-section">
+            <div class="wh-section-title">
+              <span>${isTr ? "Wallpaper Engine Filtreleri" : "Wallpaper Engine Filters"}</span>
+              <span class="widget-key">Alt+W → E</span>
+            </div>
+            <div class="w-row">
+              <label>${isTr ? "Arama / Etiket" : "Search / Tag"}</label>
+              <input type="text" data-sec="wallpaper" data-key="we_query" placeholder="${isTr ? "ör. dark, rain, minimal, space..." : "e.g. dark, rain, minimal, space..."}" value="${escapeHtml(sec.we_query || "")}" />
+            </div>
+            <div class="w-row">
+              <label>${isTr ? "Tür / Kategori" : "Genre / Tag"}</label>
+              <select data-sec="wallpaper" data-key="we_genre">
+                ${[
+                  ["", isTr ? "Tümü" : "All"],
+                  ["Landscape", isTr ? "Manzara (Landscape)" : "Landscape"],
+                  ["Cyberpunk", "Cyberpunk"],
+                  ["Sci-Fi", "Sci-Fi"],
+                  ["Nature", isTr ? "Doğa (Nature)" : "Nature"],
+                  ["Abstract", isTr ? "Soyut (Abstract)" : "Abstract"],
+                  ["Minimalist", "Minimalist"],
+                  ["Fantasy", isTr ? "Fantastik (Fantasy)" : "Fantasy"],
+                  ["Space", isTr ? "Uzay (Space)" : "Space"],
+                  ["Game", isTr ? "Oyun (Game)" : "Game"],
+                  ["Retro", "Retro"],
+                  ["Technology", isTr ? "Teknoloji (Tech)" : "Technology"],
+                  ["Anime", "Anime"]
+                ].map(([v, l]) => `<option value="${v}" ${(sec.we_genre || "") === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}
+              </select>
+            </div>
+            <div class="w-row">
+              <label>${isTr ? "İçerik Tipi" : "Type"}</label>
+              <select data-sec="wallpaper" data-key="we_type">
+                ${[
+                  ["", isTr ? "Tümü (Hepsi)" : "All Types"],
+                  ["Scene", "Scene"],
+                  ["Video", "Video"],
+                  ["Web", "Web"]
+                ].map(([v, l]) => `<option value="${v}" ${(sec.we_type || "") === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}
+              </select>
+            </div>
+            <div class="w-row">
+              <label>${isTr ? "Sıralama" : "Sort By"}</label>
+              <select data-sec="wallpaper" data-key="we_sort">
+                ${[
+                  ["toprated", isTr ? "En Yüksek Puanlı" : "Top Rated"],
+                  ["trend", isTr ? "Trend (Popüler)" : "Trending"],
+                  ["mostrecent", isTr ? "En Yeni" : "Most Recent"]
+                ].map(([v, l]) => `<option value="${v}" ${(sec.we_sort || "toprated") === v ? "selected" : ""}>${escapeHtml(l)}</option>`).join("")}
+              </select>
+            </div>
+            <div class="w-row">
+              <label>${isTr ? "Anime Gizle" : "Hide Anime"}</label>
+              <div class="wh-cat-pills">
+                <button type="button" class="wh-pill ${sec.we_exclude_anime !== false ? "active" : ""}" data-we-no-anime="1">${sec.we_exclude_anime !== false ? (isTr ? "Anime Hariç Tutuluyor ✓" : "Anime Excluded ✓") : (isTr ? "Anime Gösteriliyor" : "Anime Shown")}</button>
+              </div>
+            </div>
+            <div class="w-row">
+              <label>${isTr ? "Ses" : "Audio"}</label>
+              <div class="wh-cat-pills">
+                <button type="button" class="wh-pill ${sec.we_mute_audio !== false ? "active" : ""}" data-we-mute="1">${sec.we_mute_audio !== false ? (isTr ? "Ses Kapalı (Sessiz) ✓" : "Muted by Default ✓") : (isTr ? "Ses Açık" : "Audio Enabled")}</button>
+              </div>
+            </div>
+          </div>
+        `;
+      })() : ""}
+      <div class="widget-foot">
+        <button class="tool-btn w-preview-btn" data-mode="${sp.id}">${t("livePreview")}</button>
+        <button class="tool-btn accent-ghost w-save-btn">${t("apply")}</button>
+      </div>
+    `;
+
+    card.querySelectorAll(".wh-pill[data-wh-cat]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const idx = parseInt(btn.dataset.whCat, 10);
+        const arr = (cfg.wallpaper.wallhaven_categories || "111").padEnd(3, "1").split("");
+        arr[idx] = arr[idx] === "1" ? "0" : "1";
+        if (arr.join("") === "000") arr[idx] = "1";
+        cfg.wallpaper.wallhaven_categories = arr.join("");
+        renderMain();
+      });
+    });
+
+    card.querySelectorAll("[data-we-no-anime]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        cfg.wallpaper.we_exclude_anime = cfg.wallpaper.we_exclude_anime === false;
+        renderMain();
+      });
+    });
+
+    card.querySelectorAll("[data-we-mute]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        cfg.wallpaper.we_mute_audio = cfg.wallpaper.we_mute_audio === false;
+        renderMain();
+      });
+    });
+
+    card.querySelectorAll(".w-font-select").forEach(sel => {
+      sel.addEventListener("change", () => {
+        const s = sel.dataset.sec;
+        const isRasi = sel.dataset.rasi === "1";
+        let fam = sel.value;
+        if (fam === "__custom__") {
+          const cur = isRasi ? splitRasiFont(cfg[s].font).family : (cfg[s].font || "");
+          const entered = window.prompt(isTr ? "Font adını girin (ör. FiraCode Nerd Font):" : "Enter font family name (e.g. FiraCode Nerd Font):", cur);
+          if (!entered || !entered.trim()) { renderMain(); return; }
+          fam = entered.trim();
+        }
+        if (isRasi) {
+          const szEl = card.querySelector(`.w-font-size[data-sec="${s}"]`);
+          const sz = szEl ? szEl.value : splitRasiFont(cfg[s].font).size;
+          cfg[s].font = `${fam} ${sz}`;
+        } else {
+          cfg[s].font = fam;
+        }
+        renderMain();
+      });
+    });
+
+    card.querySelectorAll(".w-font-size").forEach(sel => {
+      sel.addEventListener("change", () => {
+        const s = sel.dataset.sec;
+        const fam = splitRasiFont(cfg[s].font).family;
+        cfg[s].font = `${fam} ${sel.value}`;
+      });
+    });
+
+    card.querySelectorAll("select[data-key], input[data-key]").forEach(el => {
+      el.addEventListener("input", () => {
+        const s = el.dataset.sec, k = el.dataset.key;
+        if (k === "radius") {
+          cfg[s][k] = Math.max(0, Math.min(32, parseInt(el.value || "18", 10) || 0));
+        } else {
+          cfg[s][k] = el.value;
+        }
+        if (el.type === "color") {
+          const code = el.parentElement.querySelector("code");
+          if (code) code.textContent = el.value;
+        }
+        if (k === "theme_mode" || k === "wallhaven_sorting") renderMain();
+      });
+    });
+    card.querySelector(".w-save-btn").addEventListener("click", () => saveWidgetsConfig());
+    card.querySelector(".w-preview-btn").addEventListener("click", () => previewWidgetMode(sp.id));
+    grid.appendChild(card);
+  }
+
+  wrap.querySelector("#openWidgetsTomlBtn").addEventListener("click", async () => {
+    try {
+      await api("/api/open-widgets-config", { method: "POST", body: "{}" });
+      showToast(t("widgetsOpened"));
+    } catch (err) { showToast(t("errPrefix") + err.message); }
+  });
+  wrap.querySelector("#toggleRawTomlBtn").addEventListener("click", () => {
+    state.showRawToml = !state.showRawToml;
+    renderMain();
+  });
+  wrap.querySelector("#saveAllWidgetsBtn").addEventListener("click", () => saveWidgetsConfig());
+  wrap.querySelector("#resetWidgetsBtn").addEventListener("click", async () => {
+    try {
+      state.widgetsConfig = await api("/api/widgets-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reset: true }),
+      });
+      showToast(t("widgetsReset"));
+      renderMain();
+    } catch (err) { showToast(t("errPrefix") + err.message); }
+  });
+  const saveRawBtn = wrap.querySelector("#saveRawTomlBtn");
+  if (saveRawBtn) {
+    saveRawBtn.addEventListener("click", () => {
+      const ta = wrap.querySelector("#rawTomlArea");
+      if (ta) saveWidgetsConfig(ta.value);
+    });
+  }
+
+  container.innerHTML = "";
+  container.appendChild(wrap);
+}
+
 function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
 }
@@ -1043,6 +1910,10 @@ async function doApplyTheme(name) {
     updateChrome();
     renderMain();
     showToast(t("toastThemeApplied")(name));
+    try {
+      const fresh = await api("/api/state");
+      if (fresh.activeThemeColors) applyStudioTheme(fresh.activeThemeColors);
+    } catch (_) {}
   } catch (err) {
     showToast(t("errPrefix") + err.message);
   }
@@ -1056,6 +1927,16 @@ async function doApplyPalette(name) {
       body: JSON.stringify({ name }),
     });
     state.activePalette = name;
+    const pal = state.palettes.find(p => p.name === name);
+    if (pal) {
+      applyStudioTheme({
+        bg: pal.bg,
+        bgAlt: pal.bg_alt,
+        fg: pal.fg,
+        accent: pal.selected || pal.active,
+        urgent: pal.urgent,
+      });
+    }
     updateChrome();
     renderMain();
     showToast(t("toastPaletteApplied")(name));
@@ -1092,6 +1973,26 @@ async function importSingleTheme(name, content, applyAfter = false) {
   }
   return res.name;
 }
+
+document.getElementById("folderImport").addEventListener("click", async event => {
+  const button = event.currentTarget;
+  button.disabled = true;
+  try {
+    const res = await api("/api/import-folder", {method: "POST"});
+    if (res.cancelled) return;
+    closeImportModal();
+    state.tab = "themes";
+    state.category = "All";
+    state.sort = "newest";
+    state.cacheBust = Date.now();
+    await loadState();
+    showToast(t("toastImportedOne")(res.name));
+  } catch (err) {
+    showToast(t("errPrefix") + err.message);
+  } finally {
+    button.disabled = false;
+  }
+});
 
 async function handleImportFiles(fileList) {
   const files = Array.from(fileList || []).filter(f => f && f.size > 0);
@@ -1254,6 +2155,15 @@ document.getElementById("prerenderBtn").addEventListener("click", async () => {
     });
     showToast(t("toastPrerenderStart"));
     pollPrerender();
+  } catch (err) {
+    showToast(t("errPrefix") + err.message);
+  }
+});
+
+document.getElementById("openThemesDirBtn").addEventListener("click", async () => {
+  try {
+    await api("/api/open-themes-folder", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+    showToast(t("toastThemesDirOpened"));
   } catch (err) {
     showToast(t("errPrefix") + err.message);
   }

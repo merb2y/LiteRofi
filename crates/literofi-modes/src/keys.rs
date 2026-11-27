@@ -62,6 +62,7 @@ impl RichMode for KeysMode {
             UiOutcome::DeleteEntry { .. } => Ok(ModeStep::Reload),
             UiOutcome::Cancelled => Ok(ModeStep::Exit(1)),
             UiOutcome::ModeSwitch(idx) => Ok(ModeStep::SwitchModeIndex(*idx)),
+            UiOutcome::Back => Ok(ModeStep::Reload),
         }
     }
 }

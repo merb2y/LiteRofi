@@ -1,0 +1,116 @@
+/* LiteRofi Power Menu — based on `adi1090x/rofi` powermenu type-2/style-1.rasi
+ * Displays system uptime header + 5 large horizontal icon buttons (Lock, Suspend, Logout, Reboot, Shutdown).
+ */
+
+configuration {
+    show-icons: false;
+}
+
+* {
+    background:     #1E2128;
+    background-alt: #282C34;
+    foreground:     #E5E9F0;
+    selected:       #61AFEF;
+    active:         #98C379;
+    urgent:         #E06C75;
+    font:           "Segoe UI Semibold 11";
+}
+
+window {
+    transparency:     "real";
+    location:         center;
+    anchor:           center;
+    fullscreen:       false;
+    width:            760px;
+    border:           2px solid;
+    border-radius:    14px;
+    border-color:     @selected;
+    background-color: @background;
+}
+
+mainbox {
+    enabled:          true;
+    spacing:          18px;
+    padding:          26px;
+    background-color: transparent;
+    children:         [ "inputbar", "message", "listview" ];
+}
+
+inputbar {
+    enabled:          true;
+    spacing:          12px;
+    background-color: transparent;
+    text-color:       @foreground;
+    children:         [ "textbox-prompt-colon", "prompt" ];
+}
+
+textbox-prompt-colon {
+    enabled:          true;
+    expand:           false;
+    str:              "";
+    padding:          10px 15px;
+    border-radius:    10px;
+    background-color: @urgent;
+    text-color:       @background;
+    font:             "JetBrainsMono Nerd Font 14";
+}
+
+prompt {
+    enabled:          true;
+    padding:          10px 16px;
+    border-radius:    10px;
+    background-color: @active;
+    text-color:       @background;
+    font:             "Segoe UI Bold 11";
+}
+
+message {
+    enabled:          true;
+    padding:          10px 14px;
+    border-radius:    10px;
+    background-color: @background-alt;
+    text-color:       @foreground;
+}
+
+textbox {
+    background-color: inherit;
+    text-color:       inherit;
+    horizontal-align: 0.5;
+    vertical-align:   0.5;
+}
+
+listview {
+    enabled:          true;
+    columns:          5;
+    lines:            1;
+    cycle:            true;
+    dynamic:          true;
+    scrollbar:        false;
+    layout:           vertical;
+    flow:             horizontal;
+    fixed-height:     true;
+    fixed-columns:    false;
+    spacing:          14px;
+    background-color: transparent;
+}
+
+element {
+    enabled:          true;
+    padding:          28px 10px;
+    border-radius:    12px;
+    background-color: @background-alt;
+    text-color:       @foreground;
+}
+
+element selected.normal {
+    background-color: @selected;
+    text-color:       @background;
+}
+
+element-text {
+    font:             "JetBrainsMono Nerd Font 28";
+    background-color: transparent;
+    text-color:       inherit;
+    horizontal-align: 0.5;
+    vertical-align:   0.5;
+}

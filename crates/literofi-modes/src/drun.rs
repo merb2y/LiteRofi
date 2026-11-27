@@ -200,6 +200,12 @@ impl DrunMode {
         let Some(item) = self.items.get(idx).cloned() else {
             return Err(format!("drun index {idx} out of bounds"));
         };
+        let launch_res = if self.dry_run {
+            self.launched.push(item.app.id.clone());
+            Ok(())
+        } else {
+            launch_windows_app(&item.app.launch)
+        };
         if !self.cfg.disable_history {
             let path = self.history_path();
             if let Some(parent) = path.parent() {
@@ -207,11 +213,7 @@ impl DrunMode {
             }
             let _ = history_set(&path, &item.app.id, &self.history_cfg());
         }
-        if self.dry_run {
-            self.launched.push(item.app.id);
-            return Ok(());
-        }
-        launch_windows_app(&item.app.launch)
+        launch_res
     }
 }
 
@@ -347,6 +349,7 @@ impl RichMode for DrunMode {
             }
             UiOutcome::Cancelled => Ok(ModeStep::Exit(1)),
             UiOutcome::ModeSwitch(idx) => Ok(ModeStep::SwitchModeIndex(*idx)),
+            UiOutcome::Back => Ok(ModeStep::Reload),
         }
     }
 }

@@ -1,0 +1,55 @@
+/* Upstream `ntcarlson/dotfiles` (delta branch: config/rofi/games.rasi) */
+configuration {
+    show-icons:                     true;
+    drun-display-format:            "{name}";
+    drun-match-fields:              "name";
+}
+
+@import "launcher.rasi"
+
+window {
+    height:                         360px;
+}
+
+listview {
+    layout:                         vertical;
+    flow:                           horizontal;
+    padding:                        12px;
+    dynamic:                        true;
+    columns:                        9;
+    lines:                          1;
+    fixed-height:                   true;
+    fixed-columns:                  true;
+    scrollbar:                      false;
+}
+
+@media (min-width: 2400) {
+    listview {
+        columns:                    12;
+    }
+}
+
+@media (min-width: 3440) {
+    listview {
+        columns:                    16;
+    }
+}
+
+element-icon {
+    padding:                        4px;
+    horizontal-align:               0.5;
+    border:                         4px solid;
+    border-color:                   transparent;
+    border-radius:                  16px;
+    size:                           220px;
+}
+
+element-icon selected {
+    border-color:                   @primary;
+}
+
+element-text {
+    horizontal-align:               0.5;
+    vertical-align:                 0.5;
+    width:                          160px;
+}

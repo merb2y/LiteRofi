@@ -1,0 +1,109 @@
+/**
+ * LiteRofi Control Center & Shortcuts Theme
+ * Dynamically synced to the user's active LiteRofi palette with WCAG contrast.
+ */
+
+configuration {
+    show-icons: false;
+    hover-select: true;
+    me-select-entry: "";
+    me-accept-entry: "MousePrimary";
+}
+
+* {
+    bg:          #1e1e2e;
+    bg-alt:      #2a2b3d;
+    fg:          #cdd6f4;
+    accent:      #89b4fa;
+    accent-fg:   #1e1e2e;
+    font:        "Segoe UI 10";
+}
+
+window {
+    width:            700px;
+    location:         center;
+    anchor:           center;
+    transparency:     "real";
+    border:           2px solid;
+    border-radius:    16px;
+    border-color:     @accent;
+    background-color: @bg;
+    padding:          16px;
+}
+
+mainbox {
+    orientation:      vertical;
+    spacing:          10px;
+    background-color: transparent;
+    children:         [ inputbar, message, listview ];
+}
+
+inputbar {
+    orientation:      horizontal;
+    spacing:          10px;
+    padding:          10px 14px;
+    border-radius:    12px;
+    background-color: @bg-alt;
+    children:         [ prompt, entry ];
+}
+
+prompt {
+    background-color: @accent;
+    text-color:       @accent-fg;
+    font:             "Segoe UI Semibold 10";
+    padding:          6px 12px;
+    border-radius:    8px;
+}
+
+entry {
+    background-color: transparent;
+    text-color:       @fg;
+    placeholder:      "Search controls or shortcuts...";
+    placeholder-color: #7f849c;
+    vertical-align:   0.5;
+}
+
+message {
+    background-color: transparent;
+    padding:          2px 4px;
+}
+
+textbox {
+    background-color: transparent;
+    text-color:       @fg;
+    font:             "Segoe UI 9";
+}
+
+listview {
+    columns:          1;
+    lines:            10;
+    spacing:          7px;
+    fixed-height:     false;
+    scrollbar:        false;
+    background-color: transparent;
+}
+
+element {
+    orientation:      horizontal;
+    padding:          10px 14px;
+    border:           1px solid;
+    border-color:     transparent;
+    border-radius:    10px;
+    background-color: @bg-alt;
+    text-color:       @fg;
+    cursor:           pointer;
+}
+
+element selected.normal {
+    background-color: @accent;
+    border-color:     @accent;
+    text-color:       @accent-fg;
+}
+
+element-text {
+    horizontal-align: 0.0;
+    vertical-align:   0.5;
+    font:             "Segoe UI Semibold 10";
+    text-color:       inherit;
+    background-color: transparent;
+}

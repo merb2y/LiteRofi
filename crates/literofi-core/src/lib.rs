@@ -7,3 +7,4 @@ pub mod keyb;
 pub mod matcher;
 pub mod mode;
 pub mod protocol;
+pub mod widgets_config;

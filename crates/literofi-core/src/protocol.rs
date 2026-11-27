@@ -121,11 +121,7 @@ pub fn parse_header_entry(headers: &mut ScriptHeaderOptions, payload: &[u8]) {
     };
     match key.to_ascii_lowercase().as_str() {
         "message" => {
-            headers.message = if value.is_empty() {
-                None
-            } else {
-                Some(value.to_string())
-            };
+            headers.message = Some(value.to_string());
         }
         "prompt" => {
             headers.prompt = Some(value.to_string());

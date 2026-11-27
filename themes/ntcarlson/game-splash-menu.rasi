@@ -1,0 +1,72 @@
+/* Upstream `ntcarlson/dotfiles` (delta branch: config/rofi/game-splash-menu.rasi) */
+@import "launcher.rasi"
+
+window {
+    height:                         360px;
+}
+
+mainbox {
+    children:                       [horizontal-box, icon-title];
+    orientation:                    horizontal;
+    padding:                        0px;
+}
+
+icon-title {
+    expand:                         false;
+    vertical-align:                 0.5;
+    horizontal-align:               0.5;
+    size:                           460px;
+    margin:                         0px 40px 0px 0px;
+}
+
+horizontal-box {
+    children:                       [dummy, vertical-box, dummy];
+    expand:                         false;
+    orientation:                    horizontal;
+    padding:                        0px 38% 0px 18%;
+}
+
+vertical-box {
+    children:                       [message, listview, textbox-width];
+    expand:                         false;
+    orientation:                    vertical;
+    background-color:               rgba(0, 0, 0, 0.55);
+}
+
+textbox-width {
+    expand:                         false;
+    width:                          300px;
+    height:                         1px;
+}
+
+listview {
+    layout:                         vertical;
+    padding:                        14px 0px 0px 0px;
+    columns:                        1;
+    lines:                          5;
+}
+
+element {
+    children:                       [element-text];
+    padding:                        8px 12px;
+    margin:                         8px 24px;
+    orientation:                    horizontal;
+    background-color:               rgba(0, 0, 0, 0.58);
+    border-radius:                  16px;
+}
+
+element selected {
+    background-color:               @primary;
+    border-radius:                  16px;
+}
+
+element-text {
+    horizontal-align:               0.5;
+    vertical-align:                 0.5;
+    font:                           "Segoe UI Semibold 10";
+}
+
+element-text selected {
+    horizontal-align:               0.5;
+    text-color:                     @background;
+}

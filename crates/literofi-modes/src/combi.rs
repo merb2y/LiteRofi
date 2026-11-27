@@ -160,7 +160,7 @@ impl CombiMode {
                     rest.to_string(),
                 ))
             }
-            UiOutcome::Cancelled | UiOutcome::ModeSwitch(_) => None,
+            UiOutcome::Cancelled | UiOutcome::Back | UiOutcome::ModeSwitch(_) => None,
         }
     }
 

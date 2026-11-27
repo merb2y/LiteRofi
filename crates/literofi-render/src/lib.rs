@@ -7,6 +7,12 @@ pub mod state;
 pub mod tree;
 
 #[cfg(windows)]
+pub mod games_widget;
+#[cfg(windows)]
+pub mod music_widget;
+#[cfg(windows)]
+pub mod wallpaper_carousel;
+#[cfg(windows)]
 pub mod win32_d2d;
 #[cfg(windows)]
 pub mod win32_icons;

@@ -15,6 +15,7 @@ param(
     [string]$LiteRofiExe = "$env:LOCALAPPDATA\LiteRofi\literofi.exe",
     [string]$OutDir = "",
     [string]$Mode = "drun",
+    [string]$ReferencePngDir = "",
     [switch]$KeepPngs
 )
 
@@ -42,12 +43,15 @@ New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
 $pngDir = Join-Path $OutDir "pngs"
 New-Item -ItemType Directory -Force -Path $pngDir | Out-Null
 
-$rasiFiles = Get-ChildItem -Path $ThemesDir -Filter "*.rasi" -File | Sort-Object Name
+$rasiFiles = Get-ChildItem -Path $ThemesDir -Filter "*.rasi" -File -Recurse | Sort-Object FullName
 Write-Host "Auditing $($rasiFiles.Count) themes from '$ThemesDir' using '$LiteRofiExe' (mode=$Mode)..."
 
 $renderMeta = @()
 foreach ($f in $rasiFiles) {
-    $pngPath = Join-Path $pngDir ($f.BaseName + ".png")
+    $root = (Get-Item -LiteralPath $ThemesDir).FullName.TrimEnd('\', '/')
+    $relative = $f.FullName.Substring($root.Length + 1)
+    $pngPath = Join-Path $pngDir ([IO.Path]::ChangeExtension($relative, ".png"))
+    New-Item -ItemType Directory -Path (Split-Path -Parent $pngPath) -Force | Out-Null
     if (Test-Path $pngPath) { Remove-Item -Force $pngPath }
     $sw = [System.Diagnostics.Stopwatch]::StartNew()
     $stderr = ""
@@ -61,7 +65,7 @@ foreach ($f in $rasiFiles) {
     }
     $sw.Stop()
     $renderMeta += [PSCustomObject]@{
-        name      = $f.BaseName
+        name      = [IO.Path]::ChangeExtension($relative, $null).TrimEnd('.')
         rasi      = $f.FullName
         png       = $pngPath
         exit_code = $exitCode
@@ -77,7 +81,8 @@ $renderMeta | ConvertTo-Json -Depth 4 | Set-Content -Path $metaJsonPath -Encodin
 $pyScript = @'
 import json, math, os, re, struct, sys, zlib
 
-meta_path, out_dir = sys.argv[1], sys.argv[2]
+meta_path, out_dir = sys.argv[1:3]
+reference_dir = sys.argv[3] if len(sys.argv) > 3 else ""
 with open(meta_path, "r", encoding="utf-8-sig") as f:
     items = json.load(f)
 if isinstance(items, dict):
@@ -246,6 +251,21 @@ for it in items:
                 severity = "WARN" if severity == "OK" else severity
                 issues.append(f"touches_screen_edge(bbox={px['bbox']})")
 
+    reference_size = None
+    if reference_dir:
+        reference = os.path.join(reference_dir, name + ".png")
+        if os.path.isfile(reference):
+            with open(reference, "rb") as image:
+                header = image.read(24)
+            if header.startswith(b"\x89PNG\r\n\x1a\n") and len(header) == 24:
+                reference_size = list(struct.unpack(">II", header[16:24]))
+            if not reference_size or (px and [px["w"], px["h"]] != reference_size):
+                issues.append(f"reference_size_differs({reference_size})")
+        else:
+            issues.append("reference_png_missing")
+        if issues and severity == "OK":
+            severity = "WARN"
+
     for fl in rasi_flags:
         if fl.startswith("missing_import:") or fl.startswith("linux_asset_path:"):
             severity = "WARN" if severity == "OK" else severity
@@ -258,6 +278,7 @@ for it in items:
         "issues": issues,
         "features": rasi_flags,
         "pixel": px,
+        "reference_size": reference_size,
     })
 
 order = {"CRITICAL": 0, "WARN": 1, "OK": 2}
@@ -300,7 +321,7 @@ for r in crit + warn:
 
 $pyPath = Join-Path $OutDir "analyze.py"
 Set-Content -Path $pyPath -Value $pyScript -Encoding UTF8
-python $pyPath $metaJsonPath $OutDir
+python $pyPath $metaJsonPath $OutDir $ReferencePngDir
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 if (-not $KeepPngs) {
